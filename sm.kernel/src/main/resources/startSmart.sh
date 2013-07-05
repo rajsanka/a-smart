@@ -56,10 +56,28 @@ CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/solr/solr-core/4.0.0/solr-core-4.0.0
 CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/solr/solr-solrj/4.0.0/solr-solrj-4.0.0.jar:"
 CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-analyzers-common/4.0.0/lucene-analyzers-common-4.0.0.jar:"
 CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-core/4.0.0/lucene-core-4.0.0.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-analyzers-phonetic/4.0.0/lucene-analyzers-phonetic-4.0.0.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-highlighter/4.0.0/lucene-highlighter-4.0.0.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-memory/4.0.0/lucene-memory-4.0.0.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-misc/4.0.0/lucene-misc-4.0.0.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-queryparser/4.0.0/lucene-queryparser-4.0.0.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-queries/4.0.0/lucene-queries-4.0.0.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-spatial/4.0.0/lucene-spatial-4.0.0.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/com/spatial4j/spatial4j/0.3/spatial4j-0.3.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-suggest/4.0.0/lucene-suggest-4.0.0.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/lucene/lucene-grouping/4.0.0/lucene-grouping-4.0.0.jar:"
 CLASSPATH="$CLASSPATH$SMART_PATH/org/slf4j/slf4j-api/1.6.1/slf4j-api-1.6.1.jar:"                                                 
+CLASSPATH="$CLASSPATH$SMART_PATH/org/slf4j/slf4j-log4j12/1.6.4/slf4j-log4j12-1.6.4.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/slf4j/slf4j-api/1.6.4/slf4j-api-1.6.4.jar:"
 CLASSPATH="$CLASSPATH$SMART_PATH/commons-io/commons-io/1.4/commons-io-1.4.jar:"
 CLASSPATH="$CLASSPATH$SMART_PATH/commons-fileupload/commons-fileupload/1.2.1/commons-fileupload-1.2.1.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/httpcomponents/httpclient/4.1.3/httpclient-4.1.3.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/httpcomponents/httpcore/4.1.4/httpcore-4.1.4.jar:"
+CLASSPATH="$CLASSPATH$SMART_PATH/org/apache/httpcomponents/httpmime/4.1.3/httpmime-4.1.3.jar:"
 CLASSPATH="$CLASSPATH$SMART_PATH/javax/servlet/servlet-api/2.3/servlet-api-2.3.jar:"
 
-java -cp $CLASSPATH org.anon.smart.kernel.SmartKernel $1 yes
+#java  -javaagent:/home/vjaasti/jvmtools/plumbr/plumbr.jar -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/vjaasti/heapDumps -cp $CLASSPATH org.anon.smart.kernel.SmartKernel $1 yes
+java  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/vjaasti/heapDumps -cp $CLASSPATH org.anon.smart.kernel.SmartKernel $1 yes
+#java  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/home/vjaasti/heapDumps -DSmart.Development.Mode=true -DSmart.Codegen.DumpPath=/tmp/codegen/smartdump -cp $CLASSPATH org.anon.smart.kernel.SmartKernel $1 yes
 

@@ -27,7 +27,6 @@
         solr.RAMDirectoryFactory is memory based, not persistent, and doesn't work with replication. -->
   <directoryFactory name="DirectoryFactory" class="${solr.directoryFactory:solr.StandardDirectoryFactory}"/>
 
-
   <!-- realtime get handler, guaranteed to return the latest stored fields 
     of any document, without the need to commit or open a new searcher. The current 
     implementation relies on the updateLog feature being enabled. -->
@@ -69,5 +68,7 @@
     <maxFieldLength>20000</maxFieldLength>
     <writeLockTimeout>20000</writeLockTimeout>
     <commitLockTimeout>10000</commitLockTimeout>
+    <lockType>simple</lockType>
+    <unlockOnStartup>true</unlockOnStartup>
 </config>
 

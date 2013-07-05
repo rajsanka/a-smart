@@ -84,6 +84,31 @@ wget_url http://repo1.maven.org/maven2/com/google/guava/guava/14.0.1/guava-14.0.
 wget_url http://repo1.maven.org/maven2/concurrent/concurrent/1.0/concurrent-1.0.jar concurrent/concurrent/1.0/concurrent-1.0.jar
 wget_url http://repo1.maven.org/maven2/org/jboss/netty/netty/3.2.5.Final/netty-3.2.5.Final.jar org/jboss/netty/netty/3.2.5.Final/netty-3.2.5.Final.jar
 
+wget_url http://repo1.maven.org/maven2/org/apache/solr/solr-core/4.0.0/solr-core-4.0.0.jar org/apache/solr/solr-core/4.0.0/solr-core-4.0.0.jar
+wget_url http://repo1.maven.org/maven2/org/apache/solr/solr-solrj/4.0.0/solr-solrj-4.0.0.jar org/apache/solr/solr-solrj/4.0.0/solr-solrj-4.0.0.jar 
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-analyzers-common/4.0.0/lucene-analyzers-common-4.0.0.jar org/apache/lucene/lucene-analyzers-common/4.0.0/lucene-analyzers-common-4.0.0.jar
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-core/4.0.0/lucene-core-4.0.0.jar org/apache/lucene/lucene-core/4.0.0/lucene-core-4.0.0.jar 
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-analyzers-phonetic/4.0.0/lucene-analyzers-phonetic-4.0.0.jar org/apache/lucene/lucene-analyzers-phonetic/4.0.0/lucene-analyzers-phonetic-4.0.0.jar
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-highlighter/4.0.0/lucene-highlighter-4.0.0.jar org/apache/lucene/lucene-highlighter/4.0.0/lucene-highlighter-4.0.0.jar
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-memory/4.0.0/lucene-memory-4.0.0.jar org/apache/lucene/lucene-memory/4.0.0/lucene-memory-4.0.0.jar 
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-misc/4.0.0/lucene-misc-4.0.0.jar org/apache/lucene/lucene-misc/4.0.0/lucene-misc-4.0.0.jar
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-queryparser/4.0.0/lucene-queryparser-4.0.0.jar org/apache/lucene/lucene-queryparser/4.0.0/lucene-queryparser-4.0.0.jar
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-queries/4.0.0/lucene-queries-4.0.0.jar org/apache/lucene/lucene-queries/4.0.0/lucene-queries-4.0.0.jar
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-spatial/4.0.0/lucene-spatial-4.0.0.jar org/apache/lucene/lucene-spatial/4.0.0/lucene-spatial-4.0.0.jar
+wget_url http://repo1.maven.org/maven2/com/spatial4j/spatial4j/0.3/spatial4j-0.3.jar com/spatial4j/spatial4j/0.3/spatial4j-0.3.jar
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-suggest/4.0.0/lucene-suggest-4.0.0.jar org/apache/lucene/lucene-suggest/4.0.0/lucene-suggest-4.0.0.jar
+wget_url http://repo1.maven.org/maven2/org/apache/lucene/lucene-grouping/4.0.0/lucene-grouping-4.0.0.jar org/apache/lucene/lucene-grouping/4.0.0/lucene-grouping-4.0.0.jar
+wget_url http://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.6.1/slf4j-api-1.6.1.jar org/slf4j/slf4j-api/1.6.1/slf4j-api-1.6.1.jar
+wget_url http://repo1.maven.org/maven2/org/slf4j/slf4j-log4j12/1.6.4/slf4j-log4j12-1.6.4.jar org/slf4j/slf4j-log4j12/1.6.4/slf4j-log4j12-1.6.4.jar
+wget_url http://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.6.4/slf4j-api-1.6.4.jar org/slf4j/slf4j-api/1.6.4/slf4j-api-1.6.4.jar
+wget_url http://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.1.3/httpclient-4.1.3.jar org/apache/httpcomponents/httpclient/4.1.3/httpclient-4.1.3.jar
+wget_url http://repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.1.4/httpcore-4.1.4.jar org/apache/httpcomponents/httpcore/4.1.4/httpcore-4.1.4.jar
+wget_url http://repo1.maven.org/maven2/org/apache/httpcomponents/httpmime/4.1.3/httpmime-4.1.3.jar org/apache/httpcomponents/httpmime/4.1.3/httpmime-4.1.3.jar
+wget_url http://repo1.maven.org/maven2/javax/servlet/servlet-api/2.3/servlet-api-2.3.jar javax/servlet/servlet-api/2.3/servlet-api-2.3.jar
+wget_url http://repo1.maven.org/maven2/commons-io/commons-io/1.4/commons-io-1.4.jar commons-io/commons-io/1.4/commons-io-1.4.jar
+wget_url http://repo1.maven.org/maven2/commons-fileupload/commons-fileupload/1.2.1/commons-fileupload-1.2.1.jar commons-fileupload/commons-fileupload/1.2.1/commons-fileupload-1.2.1.jar
+
+
 echo "[Copying smart jars]"
 wget_url http://192.168.1.100:8888/archiva/repository/releases/org/anon/utilities/utilities/1.0-SNAPSHOT/utilities-1.0-20130403.053956-1.jar org/anon/utilities/utilities/1.0-SNAPSHOT/utilities-1.0-SNAPSHOT.jar
 wget_url http://192.168.1.100:8888/archiva/repository/releases/org/anon/smart/sm.atomicity/1.0-SNAPSHOT/sm.atomicity-1.0-20130403.054231-1.jar org/anon/smart/sm.atomicity/1.0-SNAPSHOT/sm.atomicity-1.0-SNAPSHOT.jar

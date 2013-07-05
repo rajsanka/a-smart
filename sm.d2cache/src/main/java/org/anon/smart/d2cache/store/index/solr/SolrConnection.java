@@ -73,11 +73,14 @@ import org.anon.utilities.logger.Logger;
 
 public class SolrConnection implements StoreConnection, Constants
 {
-    private EmbeddedSolrServer _server;
-    private CoreContainer _container;
+    private static EmbeddedSolrServer _server;
+    private static CoreContainer _container;
     private StoreConfig _config;
     private File _home;
     
+    private static SolrConnection _connection;
+    
+    public static final String CORENAME_DELIM = "-";
     private transient Logger _logger;
     public SolrConnection()
     {
@@ -87,18 +90,22 @@ public class SolrConnection implements StoreConnection, Constants
     public void connect(StoreConfig cfg)
         throws CtxException
     {
+    	
         assertion().assertTrue((cfg instanceof SolrConfig), "Cannot create solr indexing with no solr configuration");
+        _config = cfg;
         try
         {
+        	if(_container == null)
+        	{
             SolrConfig scfg = (SolrConfig)cfg;
             _home = new File(scfg.getIndexHome());
             assertion().assertTrue(_home.exists(), "The solr home directory does not exist. Please setup solr correctly." + scfg.getIndexHome());
             File solr = new File(_home, CORE_CONFIG);
             assertion().assertTrue(solr.exists(), "The solr config file does not exist. Please setup solr correctly." + CORE_CONFIG);
-            _container = new CoreContainer();
-            _container.load(scfg.getIndexHome(), solr);
-            _config = cfg;
-
+            _container = new CoreContainer(scfg.getIndexHome(), solr);
+            //_container.load(scfg.getIndexHome(), solr);
+        	}
+        
         }
         catch (Exception e)
         {
@@ -113,7 +120,15 @@ public class SolrConnection implements StoreConnection, Constants
     {
         try
         {
-            String corename = name;
+        	if(_server == null)
+        	{
+        	String corename = name;
+        	if(name != null)
+        	{
+        		corename = name.split(CORENAME_DELIM, 2)[0];
+        	}
+            
+        	//System.out.println("CORE NAME is :"+corename);
             File f = new File(_home, corename);
             if (!f.exists())
             {
@@ -136,6 +151,7 @@ public class SolrConnection implements StoreConnection, Constants
             	_server = new EmbeddedSolrServer(_container, corename);
             	_logger.info(">>>>>>>>>>>>>>>>>Solr server opened for connections:"+_server+"::"+corename);
             }
+        	}
         }
         catch (Exception e)
         {
@@ -199,12 +215,16 @@ public class SolrConnection implements StoreConnection, Constants
 		QueryObject qo = (QueryObject)query;
 		SolrQuery solrQuery = SolrQueryConstructor.getQuery(group, qo);
 		try {
+			perf().startHere("SolrSearch");
 			QueryResponse qr = _server.query(solrQuery);
 			SolrDocumentList docList = qr.getResults();
+			perf().checkpointHere("SolrSearch");
 			for(SolrDocument doc : docList)
 			{
 				resultSet.add(doc.getFieldValue(ID_COLUMN));
 			}
+			perf().dumpHere(_logger);
+			
 			
 		} catch (SolrServerException e) {
 			except().rt(e, new CtxException.Context("SolrConnection.search", "Exception while querying"));
@@ -217,5 +237,22 @@ public class SolrConnection implements StoreConnection, Constants
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	public static SolrConnection getConnection()
+	{
+		if(_connection == null)
+		{
+			_connection = new SolrConnection();
+		}
+		return _connection;
+	}
+
+    @Override
+    public boolean exists(String group, Object key) 
+        throws CtxException
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
 }
 
