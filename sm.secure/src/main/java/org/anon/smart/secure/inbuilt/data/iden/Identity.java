@@ -45,6 +45,7 @@ public class Identity implements java.io.Serializable
 {
     private String _smartUser;
     private String _identity;
+    private String _randomCode;
     private SCredential _credential;
 
     public Identity(String user, String iden, SCredential cred)
@@ -52,10 +53,31 @@ public class Identity implements java.io.Serializable
         _smartUser = user;
         _identity = iden;
         _credential = cred;
+        _randomCode = "Nothing";
     }
 
     public String getSmartUser() { return _smartUser; }
     public String getIdentity() { return _identity; }
     public SCredential getCredential() { return _credential; }
+    public void setRandomCode(String cde)
+    {
+        System.out.println("The current code is: " + _randomCode + ":" + cde);
+        _randomCode = cde;
+    }
+
+    public void resetCode()
+    {
+        _randomCode = "Nothing";
+    }
+
+    public String getRandomCode()
+    {
+        return _randomCode;
+    }
+
+    public String toString()
+    {
+        return _smartUser + ":" + _identity + ":" + _randomCode + ":" + _credential;
+    }
 }
 

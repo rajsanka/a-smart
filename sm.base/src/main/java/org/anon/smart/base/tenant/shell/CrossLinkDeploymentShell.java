@@ -82,7 +82,7 @@ public class CrossLinkDeploymentShell extends CrossLinker
         throws CtxException
     {
         Object dep = linkMethod("deploymentFor", flow);
-        assertion().assertNotNull(dep, "There is no deployment found for: " + dep);
+        assertion().assertNotNull(dep, "There is no deployment found for: " + dep + ":" + flow);
         return new CrossLinkFlowDeployment(dep);
     }
 
@@ -114,6 +114,12 @@ public class CrossLinkDeploymentShell extends CrossLinker
         return (List<Class>)linkMethod("transitionsFor", dep, prime, event, extra);
     }
 
+    public Class eventClass(String dep, String type)
+        throws CtxException
+    {
+        return (Class)linkMethod("eventClass", dep, type);
+    }
+
     public Class primeClass(String dep, String type)
         throws CtxException
     {
@@ -132,10 +138,10 @@ public class CrossLinkDeploymentShell extends CrossLinker
         return (Class)linkMethod("configClass", dep, type);
     }
 
-    public void enableForMe(String name, String[] features)
+    public void enableForMe(String name, String[] features, boolean lookup)
         throws CtxException
     {
-        linkMethod("enableForMe", name, features);
+        linkMethod("enableForMe", name, features, lookup);
     }
 
     public List<CrossLinkFlowDeployment> linkedDeploymentsFor(String flow, String object)
@@ -151,6 +157,18 @@ public class CrossLinkDeploymentShell extends CrossLinker
         }
 
         return ret;
+    }
+
+    public Object[] getServiceFor(String service)
+        throws CtxException
+    {
+        return (Object[])linkMethod("getServiceFor", service);
+    }
+
+    public String[] linksFor(String dep, Class cls, String key)
+        throws CtxException
+    {
+        return (String[])linkMethod("linksFor", dep, cls, key);
     }
 }
 

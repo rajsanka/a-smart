@@ -30,7 +30,7 @@ public class HBaseCRUDTest {
 		for(int i = 0;i<1000;i++) 
 		{
 			SimpleTestObject obj = new SimpleTestObject();
-			hTxn.addRecord("SimpleTestObject", "mystr"+i, obj, null);
+			hTxn.addRecord("SimpleTestObject", "mystr"+i, obj, null, true);
 		}
 		
 		hTxn.commit();
@@ -43,7 +43,7 @@ public class HBaseCRUDTest {
 		for(int i= 0;i<1000;i++)
 		{
 			ComplexTestObject obj = new ComplexTestObject();
-			hTxn.addRecord("ComplexTestObject", "mycompobj"+i, obj, null);
+			hTxn.addRecord("ComplexTestObject", "mycompobj"+i, obj, null, true);
 		
 		}
 		hTxn.commit();

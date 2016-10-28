@@ -69,7 +69,9 @@ public class DefaultTemplate implements SearchTemplate
             Object dep = cl.invoke("getDeploying");
             if (cls.indexOf("testapp") >= 0)
                 System.out.println("The deployment got is: " + dep + ":" + cls + ":" + ldr);
-            boolean ret = ((dep != null) && (dep.getClass().getName().equals(FlowDeployment.class.getName())));
+            //I know maybe we shd just do it as an instanceof FlowDeployment? But it may not work because of classloaders
+            boolean ret = ((dep != null) && ((dep.getClass().getName().equals(FlowDeployment.class.getName())) ||
+                                            (dep.getClass().getName().equals("org.anon.smart.secure.flow.SecureFlowDeployment"))));
             //do not create a template for any of the smart or utility classes.
             //smart classes that need soa, needs to have an explicit soa declared
             ret = ret && (!cls.startsWith("org.anon.smart"));
@@ -92,19 +94,25 @@ public class DefaultTemplate implements SearchTemplate
         Object odep = cldrt.invoke("getDeploying");
         CrossLinkAny cl = new CrossLinkAny(odep);
         String dtype = (String)cl.invoke("getDataType", clsname);
-        assertion().assertNotNull(dtype, "Cannot find the type for: " + clsname);
-        String name = (String)cl.invoke("deployedName");
-        String[] parms = (String[])cl.invoke("getParmsFor", dtype, clsname);
-        Class<? extends BaseTL> cls = TemplateReader.getTemplateMapping(dtype);
-        System.out.println("searchFor for: " + clsname + ":" + dtype + ":" + name + ":" + parms.length + ":" + cls);
-        if (cls != null)
+        //assertion().assertNotNull(dtype, "Cannot find the type for: " + clsname);
+        if (dtype != null)
         {
-            CrossLinkAny clbtl = new CrossLinkAny(cls.getName());
-            ret = (BaseTL)clbtl.invoke("defaultFor", new Class[] { String.class, String.class, String.class, String[].class }, 
-                    new Object[] { clsname, dtype, name, parms });
-        }
+            String name = (String)cl.invoke("deployedName");
+            String[] parms = (String[])cl.invoke("getParmsFor", dtype, clsname);
+            Class<? extends BaseTL> cls = TemplateReader.getTemplateMapping(dtype);
+            System.out.println("searchFor for: " + clsname + ":" + dtype + ":" + name + ":" + parms.length + ":" + cls);
+            if (cls != null)
+            {
+                CrossLinkAny clbtl = new CrossLinkAny(cls.getName());
+                ret = (BaseTL)clbtl.invoke("defaultFor", new Class[] { String.class, String.class, String.class, String[].class }, 
+                        new Object[] { clsname, dtype, name, parms });
+            }
 
-        return new BaseTL[] { ret };
+
+            return new BaseTL[] { ret };
+        }
+        
+        return null;
     }
 
     public Repeatable repeatMe(RepeaterVariants vars)

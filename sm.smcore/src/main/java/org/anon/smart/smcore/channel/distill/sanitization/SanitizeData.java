@@ -65,6 +65,8 @@ import org.anon.smart.smcore.data.SmartPrimeData;
 import org.anon.smart.smcore.events.SmartEvent;
 import org.anon.smart.smcore.channel.server.EventPData;
 import org.anon.smart.smcore.channel.server.EventDScope;
+import org.anon.smart.smcore.channel.server.RawEventPData;
+import org.anon.smart.smcore.channel.server.RawEventDScope;
 import org.anon.smart.smcore.channel.distill.ChannelConstants;
 import org.anon.smart.smcore.channel.distill.translation.MapData;
 import org.anon.smart.smcore.channel.distill.translation.ObjectData;
@@ -77,6 +79,9 @@ import org.anon.utilities.exception.CtxException;
 
 public class SanitizeData implements ChannelConstants
 {
+    private static final String NO_SEARCH = "USEDASDATA";
+    private static final int INVALID_PRIME = 20000001;
+
     public SanitizeData()
     {
     }
@@ -84,18 +89,80 @@ public class SanitizeData implements ChannelConstants
     public void sanitizePData(PData data, SearchedData populate)
         throws CtxException
     {
+        System.out.println("data is: " + (data instanceof MessagePData) + ":" + data);
     	if(data instanceof MessagePData)
     	{
     		sanitizePDataForMessage(data, populate);
     		return;
     	}
+        else if (data instanceof RawEventPData)
+        {
+            //Will be done in the sanitize data below.
+            //sanitizePDataForRaw(data, populate);
+            return;
+        }
+
         EventPData epdata = (EventPData)data;
         EventDScope epscope = (EventDScope)data.dscope();
 
         String tenant = epdata.tenant();
         SmartTenant stenant = TenantsHosted.tenantFor(tenant, false);
         assertion().assertNotNull(stenant, "Tenant " + tenant + " does not exist");
-        populate.setupTenant(stenant);
+
+        if ((stenant.getDomain() != null) && (stenant.getDomain().length > 0))
+        {
+            String[] domain = stenant.getDomain();
+            String checkagainst = epscope.origin();
+            if (checkagainst == null)
+            {
+                checkagainst = epscope.referer();
+                if (checkagainst != null)
+                {
+                    int index = checkagainst.indexOf("/", 7);
+                    checkagainst = checkagainst.substring(0, index);
+                }
+            }
+
+
+            assertion().assertNotNull(checkagainst, "Cannot be called from null origin. Has to be called from: " + stenant.getDomain());
+
+            String origin = checkagainst;
+            String compare1 = origin;
+            if (origin.startsWith("http://"))
+                compare1 = origin.substring(7);
+
+            String compare2 = compare1;
+            if (compare1.startsWith("www"))
+                compare2 = compare1.substring(4);
+            else
+                compare2 = "www." + compare1;
+
+            String[] diffvers = new String[3]; //add more if present here.
+            diffvers[0] = origin;
+            diffvers[1] = compare1;
+            diffvers[2] = compare2;
+
+            boolean found = false;
+
+            for (int i = 0; i < domain.length; i++)
+            {
+                for (int j = 0; j < diffvers.length; j++)
+                {
+                    if (diffvers[j].equals(domain[i]))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            String domains = "";
+            for (int i = 0; i < domain.length; i++)
+                domains += " " + domain[i];
+            assertion().assertTrue(found, "Cannot be called from origin: " + origin + ". Has to be called from one of: " + domains);
+        }
+
+        populate.setupTenant(new CrossLinkSmartTenant(stenant));
 
         String flow = epdata.flow();
         FlowDeployment dep = stenant.deploymentShell().deploymentFor(flow);
@@ -112,6 +179,35 @@ public class SanitizeData implements ChannelConstants
         populate.setupEventLegend(epscope.eventLegend(stenant.getRelatedLoader()));
     }
 
+    private void sanitizePDataForRawEvent(PData data, MapData mdata, SearchedData populate)
+        throws CtxException
+    {
+        RawEventPData rdata = (RawEventPData)data;
+        RawEventDScope rscope = (RawEventDScope)data.dscope();
+        
+        rscope.setupForStream(mdata.translated(), rdata);
+
+        String tenant = rdata.tenant();
+        SmartTenant stenant = TenantsHosted.tenantFor(tenant, false);
+        assertion().assertNotNull(stenant, "Tenant " + tenant + " does not exist");
+
+        populate.setupTenant(new CrossLinkSmartTenant(stenant));
+
+        String flow = rdata.flow();
+        FlowDeployment dep = stenant.deploymentShell().deploymentFor(flow);
+        assertion().assertNotNull(dep, "No deployment found for flow: " + flow);
+        populate.setupFlowDeployment(dep);
+        populate.setupFlow(flow);
+
+        String eventName = rdata.eventName();
+        Class evt = stenant.deploymentShell().eventClass(flow, eventName);
+        if (evt == null)
+            evt = stenant.deploymentShell().eventClass("AllFlows", eventName); //try getting from AllFlows
+        assertion().assertNotNull(evt, "No event class found for event: " + eventName);
+        populate.setupEventClass(evt);
+        populate.setupEventLegend(rscope.eventLegend(stenant.getRelatedLoader()));
+    }
+
     private void sanitizePDataForMessage(PData data, SearchedData populate)
     	throws CtxException
     {
@@ -121,9 +217,21 @@ public class SanitizeData implements ChannelConstants
 
 		String eventName = mpData.eventName();
 
-		CrossLinkSmartTenant tenant = CrossLinkSmartTenant.currentTenant();
+		//CrossLinkSmartTenant tenant = CrossLinkSmartTenant.currentTenant();
+        //DO NOT TAKE FOR GRANTED IT IS THE CURRENT TENANT.  I WANT TO BE ABLE TO POST CROSS_TENANT
+        CrossLinkSmartTenant tenant = TenantsHosted.crosslinkedTenantFor(mpData.tenant());
+        populate.setupTenant(tenant);
 		//CrossLinkFlowDeployment dep = tenant.deploymentShell().deploymentFor(flow);
         String nm = AnnotationUtils.objectName(mpData.event());
+        java.lang.reflect.Field dest = AnnotationUtils.destinations(mpData.event().getClass());
+        if (dest != null)
+        {
+            dest.setAccessible(true);
+            Object val = reflect().getAnyFieldValue(mpData.event().getClass(), mpData.event(), dest.getName());
+            assertion().assertNotNull(val, "Destination value for " + dest.getName() + " is NULL in INTERNAL event.");
+            nm = AnnotationUtils.objectName(val);
+            System.out.println("Got destination field as: " + dest + ":" + nm + ":" + val.getClass() + ":");
+        }
 		List<CrossLinkFlowDeployment> deps =  tenant.deploymentShell().flowForType(nm);
         assertion().assertTrue(deps.size() > 0, "Cannot find deployment for: " + nm);
         CrossLinkFlowDeployment dep = deps.get(0);
@@ -132,13 +240,14 @@ public class SanitizeData implements ChannelConstants
 		populate.setupFlow(flow);
 		populate.setupFlowDeployment(dep);
 
-        Class evt = mpData.event().getClass();
+        Class evtcls = (mpData.event().getClass());
+        Class evt = tenant.getRelatedLoader().loadClass(evtcls.getName());
         System.out.println("Event Class for InternalEvent:"+evt.getName());
         assertion().assertNotNull(evt, "No event class found for event: " + eventName);
         populate.setupEventClass(evt);
         populate.setupEventLegend(mpData.dscope().eventLegend(tenant.getRelatedLoader()));
 
-        reflect().setAnyFieldValue(evt, mpData.event(), "___smart_flow_name___", flow);
+        reflect().setAnyFieldValue(evtcls, mpData.event(), "___smart_flow_name___", flow);
     	}
     	catch(Exception ex)
     	{
@@ -152,6 +261,13 @@ public class SanitizeData implements ChannelConstants
         throws CtxException
     {
         String flow = null;
+        PData pd = map.pdata();    
+        if (pd instanceof RawEventPData)
+        {
+            //For TCP requests the tenant and others are determined by
+            //either the channel or the data sent.
+            sanitizePDataForRawEvent(pd, map, populate);
+        }
         Map<String, Object> data = map.translated();
         populate.setupMappedData(data);
         List<String> prime = null;
@@ -160,10 +276,7 @@ public class SanitizeData implements ChannelConstants
         else
         	prime = populate.crossLinkFlowDeployment().getPrimeData();
         CrossLinkSmartTenant thisTenant;
-        if(populate.tenant() != null)
-            thisTenant  = new CrossLinkSmartTenant(populate.tenant());
-        else
-            thisTenant =  CrossLinkSmartTenant.currentTenant();
+        thisTenant  = populate.tenant();
 
         CrossLinkFlowDeployment fd = thisTenant.deploymentShell().deploymentFor("AllFlows");
 
@@ -215,6 +328,33 @@ public class SanitizeData implements ChannelConstants
             sanitizedKeys.add("FlowAdmin");
         }
 
+        //check in linked flows
+        if ((populate.getPrimes().size() <= 0) && (populate.flowDeployment() != null))
+        {
+            String[] lflows = populate.flowDeployment().getLinkedFlows();
+            System.out.println("Got linked flows as: " + lflows.length);
+            for (int i = 0; (lflows != null) && (i < lflows.length); i++)
+            {
+                String check = lflows[i];
+                CrossLinkFlowDeployment lfd = thisTenant.deploymentShell().deploymentFor(check);
+                List<String> lprimes =  lfd.getPrimeData();
+                System.out.println("Checking for linked flow : " + check + ":" + lprimes);
+                for (int j = 0; j < lprimes.size(); j++)
+                {
+                    String lobj = lprimes.get(j);
+                    String llook =	lfd.nameFor(lobj);
+                    System.out.println("Checking for linked flow : " + check + ":" + llook + ":" + data.get(llook));
+                    if (data.containsKey(llook))
+                    {
+                        Object srch = data.get(llook);
+                        sanitizePrime(check, llook, srch, populate);
+                        sanitizedKeys.add(llook);
+                        break;
+                    }
+                }
+            }
+        }
+
         assertion().assertTrue((populate.getPrimes().size() > 0), "There are no flows defined to which to post the event.");
 
         for (String key : data.keySet())
@@ -229,10 +369,7 @@ public class SanitizeData implements ChannelConstants
         throws CtxException
     {
     	CrossLinkSmartTenant t = null;
-    	if(populate.tenant() != null)
-    		t = new CrossLinkSmartTenant(populate.tenant());
-    	else
-    		t = CrossLinkSmartTenant.currentTenant();
+        t = populate.tenant();
 
         Class typecls = t.deploymentShell().primeClass(flow, type);
         if (typecls == null)    {
@@ -253,7 +390,7 @@ public class SanitizeData implements ChannelConstants
         }
         Object searched = searchData(flow, type, typecls, val, deps, t);
 
-        assertion().assertNotNull(searched, "Cannot find object of type: " + type + ":" + val);
+        assertion().assertNotNullWithCode(searched, INVALID_PRIME, "Cannot find object of type: " + type + ":" + val);
 
         Collection primes = null;
 
@@ -300,19 +437,23 @@ public class SanitizeData implements ChannelConstants
         if (!(value instanceof Map) && !(value instanceof Collection))
             return;
 
-        SmartTenant tenant = populate.tenant();
+        CrossLinkSmartTenant tenant = populate.tenant();
         Class cls = typeForKey(key, populate);
+        System.out.println("For key: " + key + ":" + cls);
         if (cls == null)
             return; //no field present, hence is an internal field value
 
-        String type = AnnotationUtils.className(cls);
+        String type = AnnotationUtils.crossClassName(cls);
         if (type == null)
             return; //not a hosted type
 
+        System.out.println("For key: " + key + ":" + cls + ":" + type);
         //TODO: have to take care of the same class being deployed into multiple flows.
-        List<FlowDeployment> deps = tenant.deploymentShell().flowForType(type);
+        List deps = tenant.deploymentShell().flowForType(type);
         assertion().assertTrue((deps.size() > 0), "Cannnot find the deployment for: " + type);
         Object val = searchData(populate.getFlow(), type, cls, value, deps, tenant);
+        if (val == NO_SEARCH)
+            return;
         if (val instanceof List)
             populate.addSearch(key, (List<Object>)val);
         else
@@ -328,10 +469,8 @@ public class SanitizeData implements ChannelConstants
 
         Object ret = null;
         CrossLinkRuntimeShell shell = null;
-        if(tenant instanceof SmartTenant)
-        	shell = new CrossLinkRuntimeShell(((SmartTenant)tenant).runtimeShell());
-        else
-        	shell = new CrossLinkRuntimeShell(((CrossLinkSmartTenant)tenant).runtimeShell());
+        shell = new CrossLinkRuntimeShell(((CrossLinkSmartTenant)tenant).runtimeShell());
+        System.out.println("Searching in: " + spacemodel + ":" + name + ":" + search + ":" + ((CrossLinkSmartTenant)tenant).getName());
         if ((action == null) || action.equals(LOOKUP_ACTION))
         {
             ret = shell.lookupFor(spacemodel, name, search);
@@ -347,9 +486,7 @@ public class SanitizeData implements ChannelConstants
             throws CtxException
         {
     		CrossLinkSmartTenant tenant = null;
-    		if(t instanceof SmartTenant)
-    			tenant = new CrossLinkSmartTenant(t);
-    		else tenant = (CrossLinkSmartTenant)t;
+    		tenant = new CrossLinkSmartTenant(t);
 
             Object ret = null;
             //has to be a collection or a map, else it is nothing
@@ -408,11 +545,26 @@ public class SanitizeData implements ChannelConstants
                         //load search class and populate it
                         type = tenant.getRelatedLoader().loadClass(QueryObject.class.getName());
                     }
+                    else
+                    {
+                        //this means we have not been asked to look up this object, but it is 
+                        //used as a data object.
+                        return NO_SEARCH;
+                    }
+
 
                     if ((type != null) && (type().checkPrimitive(type)))
+                    {
                         val = smap.get(VALUE);
-                    else
+                        if ((!type().isAssignable(type, val.getClass())) && convert().canConvertFromString(type))
+                            val = convert().stringToClass((String)smap.get(VALUE), type);
+                    }
+                    else if (type != null)
+                    {
                         val = convert().mapToObject(type, smap);
+                    }
+
+                    System.out.println("Got type as: " + type + ":" + convert().canConvertFromString(type) + ":" + val.getClass() + ":" + val);
                    	assertion().assertTrue(((val != null) && type().isAssignable(type, val.getClass())),
                             "Cannot lookup value: " + val + " not correct type: " + type.getName() + ":" + val);
 

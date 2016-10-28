@@ -44,6 +44,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.anon.smart.d2cache.ListParams;
+
+import org.anon.smart.d2cache.CacheableObject;
+import org.anon.smart.d2cache.store.Store;
 import org.anon.smart.d2cache.store.StoreConfig;
 import org.anon.smart.d2cache.store.StoreConnection;
 import org.anon.smart.d2cache.store.StoreTransaction;
@@ -156,23 +160,17 @@ public class DiskFileStoreConnection implements StoreConnection {
 	 * java.lang.Object)
 	 */
 	@Override
-	public List<Object> search(String group, Object query) throws CtxException {
+	public List<Store.SearchResult> search(String group, Object query, int size, int pn, int ps, String sby, boolean asc) throws CtxException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.anon.smart.d2cache.store.StoreConnection#listAll(java.lang.String,
-	 * int)
-	 */
-	@Override
-	public Iterator<Object> listAll(String group, int size) throws CtxException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+	public Iterator<Object> list(ListParams parms)
+        throws CtxException 
+    {
+        return null;
+    }
 
 	/*
 	 * (non-Javadoc)
@@ -196,5 +194,17 @@ public class DiskFileStoreConnection implements StoreConnection {
     {
         // TODO Auto-generated method stub
         return false;
+    }
+    @Override
+    public Iterator<Object> getListings(String group, String sortBy,
+            int listingsPerPage, int pageNum)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void registerMetadata(String group, Class<? extends CacheableObject> datacls)
+        throws CtxException
+    {
     }
 }

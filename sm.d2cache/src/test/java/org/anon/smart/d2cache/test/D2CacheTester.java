@@ -59,7 +59,7 @@ public class D2CacheTester implements Runnable {
 		System.out.println("D2CacheTester is loaded by: " + this.getClass().getClassLoader());
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
         String home = System.getenv("HOME");
 		config.createIndexConfig(home + "/solr/solr-datastore/");
 		config.createStoreConfig("hadoop", "2181", "hadoop:60000", false);

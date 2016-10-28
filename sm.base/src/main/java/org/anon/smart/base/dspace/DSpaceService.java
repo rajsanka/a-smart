@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.anon.smart.base.utils.AnnotationUtils;
 import org.anon.smart.base.anatomy.SmartModuleContext;
 import org.anon.smart.base.flow.FlowConstants;
 import org.anon.smart.d2cache.BrowsableReader;
@@ -58,6 +59,7 @@ import org.anon.smart.d2cache.D2CacheScheme;
 import org.anon.smart.d2cache.D2CacheTransaction;
 import org.anon.smart.d2cache.QueryObject;
 import org.anon.smart.d2cache.Reader;
+import org.anon.smart.d2cache.ListParams;
 import org.anon.smart.d2cache.store.StoreItem;
 import org.anon.smart.deployment.ArtefactType;
 import org.anon.utilities.exception.CtxException;
@@ -68,7 +70,7 @@ public class DSpaceService
     {
     }
 
-    public static DSpace spaceFor(String name, boolean browse)
+    public static DSpace spaceFor(String name, boolean browse, String fileStore)
         throws CtxException
     {
     	DSpace ret = null;
@@ -81,9 +83,9 @@ public class DSpaceService
             author = new DefaultAuthor();
 
         if (browse)
-            ret = author.browsableSpaceFor(name);
+            ret = author.browsableSpaceFor(name, fileStore);
         else
-            ret = author.newSpaceFor(name);
+            ret = author.newSpaceFor(name, fileStore);
 
         return ret;
     }
@@ -131,6 +133,14 @@ public class DSpaceService
         return D2CacheScheme.readerFor(incache);
     }
 
+    public static void registerInSpace(DSpace space, String group, Class<? extends DSpaceObject> datacls)
+        throws CtxException
+    {
+        Reader rdr = readerFor(space);
+        if (rdr != null)
+            rdr.registerMetadata(group, datacls);
+    }
+
     public static Object lookupIn(DSpace space, Object key, String group)
             throws CtxException
     {
@@ -161,7 +171,7 @@ public class DSpaceService
             return ret;
         }
 
-    public static List<Object> searchIn(DSpace space, Map<String, String> query, Class clz)
+    public static List<Object> searchIn(DSpace space, Map<String, String> query, long size, Class clz, long pn, long ps, String sby, boolean asc)
         throws CtxException
     {
         List<Object> ret = null;
@@ -172,8 +182,11 @@ public class DSpaceService
         qo.addConditions(query);
         if (rdr != null)
         {
+            System.out.println("Getting for class; " + clz);
         	String group = ArtefactType.artefactTypeFor(FlowConstants.PRIMEDATA).getName(clz);
-        	ret = rdr.search(group, qo);
+        	ret = rdr.search(group, qo, size, pn, ps, sby, asc);
+            //For now, have to find a better mechanism
+            query.put("TOTALSIZE", qo.getTotalFound() + "");
         }
 
         return ret;
@@ -191,28 +204,32 @@ public class DSpaceService
      * @return
      * @throws CtxException
      */
-    public static List<Object> listAllIn(DSpace space, String group, int size)
+    public static List<Object> listAllIn(DSpace space, ListParams parms)
     		throws CtxException
     {
     	List<Object> keyList = null;
     	List<Object> resultSet = new ArrayList<Object>();
     	Reader rdr = readerFor(space);
-    	int totSize = 0;
+    	long totSize = 0;
+        long size = parms.getSize();
+        String group = parms.getGroup();
         if (rdr != null)
         {
-            keyList = rdr.listAll(group, size); //Got keyList
+            keyList = rdr.list(parms); //Got keyList
             //System.out.println("KEY LIST:"+keyList);
             CopyOnWriteArrayList<Object> conKeyList = new CopyOnWriteArrayList<Object>(keyList);
             System.out.println("Total Keys before filtering dups:"+keyList.size());
-        
-        for(int i = 0; ((totSize < size) && (!conKeyList.isEmpty()));i++)
-        {
-            Object obj = lookupIn(space, conKeyList.get(0), group, false);
-        	List<Object> keysForObject = ((DSpaceObject)obj).smart___keys();
-        	conKeyList.removeAll(keysForObject);
-        	resultSet.add(obj);
-        	totSize++;
-        }
+            for(Object o : keyList)
+            {
+                Object obj = lookupIn(space, o, group, false);
+                if (obj != null)
+                {
+                    resultSet.add(obj);
+                    totSize++;
+                    if ((size >= 0) && (totSize >= size)) 
+                        break;
+                }
+            }
         }
         return resultSet;
     }
@@ -231,7 +248,11 @@ public class DSpaceService
         List<Object> keys = sobj.smart___keys();
         //StoreItem item = new StoreItem(keys.toArray(new Object[0]), sobj, sobj.smart___objectGroup());
         StoreItem item = new StoreItem(keys.toArray(new Object[0]), null, sobj.smart___objectGroup());
+        item.setNew(sobj.smart___isNew());
         item.setModified(sobj);
+        String storeIn = AnnotationUtils.storeInFor(sobj.getClass());
+        if ((storeIn != null) && (storeIn.length() > 0))
+            item.setStoreIn(storeIn);
         transaction.add(item);
         Object compare = sobj;
         if (compare instanceof RelatedObject)
@@ -247,8 +268,17 @@ public class DSpaceService
     {
             List<Object> keys = modified.smart___keys();
             StoreItem item = new StoreItem(keys.toArray(new Object[0]), sobj, modified.smart___objectGroup());
+            item.setNew(modified.smart___isNew());
             item.setOriginal(orig);
             item.setModified(modified);
+            DSpaceObject use = sobj;
+            if (use == null)
+                use = modified;
+            if (use == null)
+                use = orig;
+            String storeIn = AnnotationUtils.storeInFor(use.getClass());
+            if ((storeIn != null) && (storeIn.length() > 0))
+                item.setStoreIn(storeIn);
             transaction.add(item);
             Object compare = sobj;
             if (compare instanceof RelatedObject)
@@ -262,13 +292,28 @@ public class DSpaceService
     public static void addToSpace(TransactDSpace space, DSpaceObject[] sobj)
         throws CtxException
     {
+        addToSpace(space, sobj, null);
+    }
+
+    public static void addToSpace(TransactDSpace space, DSpaceObject[] sobj, DSpaceObject[] origs)
+        throws CtxException
+    {
         if ((sobj == null) || (sobj.length <= 0))
             return;
 
         UUID txnid = UUID.randomUUID();
         D2CacheTransaction transaction = space.startTransaction(txnid,false);
         for (int i = 0; i < sobj.length; i++)
-            addObject(transaction, sobj[i]);
+        {
+            if ((origs != null) && (origs.length > i) && (origs[i] != null))
+            {
+                addObject(transaction, sobj[i], sobj[i], origs[i]);
+            }
+            else
+            {
+                addObject(transaction, sobj[i]);
+            }
+        }
         transaction.commit();
     }
 
@@ -284,10 +329,11 @@ public class DSpaceService
             return space.startTransaction(txnid,true);
         }
     
-    public static void addFSObject(D2CacheTransaction transaction, String srcFl , String group)
+    public static void addFSObject(D2CacheTransaction transaction, String srcFl , String destFileName,String group)
             throws CtxException
         {
-            StoreItem item = new StoreItem(null, srcFl, group);
+	    String[] params = {srcFl , destFileName};
+            StoreItem item = new StoreItem(null, params, group);
             transaction.add(item);
             /*Object compare = sobj;
             if (compare instanceof RelatedObject)
@@ -297,5 +343,37 @@ public class DSpaceService
                     addObject(transaction, rel[r]);
             }*/
         }
+    
+    public static List getListingsFor(DSpace space, String group, String sortBy, int listingsPerPage, 
+            int pageNum)
+        throws CtxException
+    {
+        List<Object> keyList = null;
+        List<Object> resultSet = new ArrayList<Object>();
+        Reader rdr = readerFor(space);
+       if (rdr != null)
+        {
+            keyList = rdr.getListings(group, sortBy, listingsPerPage, pageNum); //Got keyList
+            /*CopyOnWriteArrayList<Object> conKeyList = new CopyOnWriteArrayList<Object>(keyList);
+            System.out.println("Total Keys before filtering dups:"+keyList.size());
+            System.out.println("Keys before :"+conKeyList);
+            for(int i = 0; !conKeyList.isEmpty();i++)
+            {
+                Object obj = lookupIn(space, conKeyList.get(0), group, false);
+                List<Object> keysForObject = ((DSpaceObject)obj).smart___keys();
+                System.out.println("BEFOR:"+conKeyList.size());
+                conKeyList.removeAll(keysForObject);
+                System.out.println("AFTER:"+conKeyList.size());
+                
+                resultSet.add(obj);
+            }*/
+            for(Object o : keyList)
+            {
+                Object obj = lookupIn(space, o, group, false);
+                resultSet.add(obj);
+            }
+        }
+        return resultSet;
+    }
 }
 

@@ -87,16 +87,14 @@ public class HadoopFileStoreTransaction extends AbstractStoreTransaction
 		for (Object fi : files.keySet()) {
 			try {
 
-				String filePath = (String) fi;
-				String[] tmp = filePath.split("/");
-				String fileName = tmp[tmp.length - 1];
+				String[] params  = (String[]) fi;
 
-				Path fldr = new Path(files.get(fi));
+				Path destination = new Path(repo + "/" + params[1]);
+				Path fldr = destination.getParent();
 				if (!hdfs.exists(fldr))
 					hdfs.mkdirs(fldr);
-
-				hdfs.copyFromLocalFile(true, new Path(filePath),
-						new Path(files.get(fi) + "/" + fileName));
+				hdfs.copyFromLocalFile(true, new Path(params[0]),
+						destination);
 
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -127,7 +125,7 @@ public class HadoopFileStoreTransaction extends AbstractStoreTransaction
 	 */
 	@Override
 	public StoreRecord addRecord(String group, Object primarykey, Object curr,
-			Object orig, Object relatedKey) throws CtxException {
+			Object orig, Object relatedKey, boolean isnew) throws CtxException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -141,7 +139,7 @@ public class HadoopFileStoreTransaction extends AbstractStoreTransaction
 	 */
 	@Override
 	protected StoreRecord createNewRecord(String group, Object primarykey,
-			Object curr, Object orig) throws CtxException {
+			Object curr, Object orig, boolean isnew) throws CtxException {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -151,5 +149,10 @@ public class HadoopFileStoreTransaction extends AbstractStoreTransaction
 		files.put(file, group);
 
 	}
+
+    public boolean shouldStore(String storeIn)
+    {
+        return true;
+    }
 
 }

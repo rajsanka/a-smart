@@ -44,6 +44,7 @@ package org.anon.smart.smcore.transition.graph;
 import java.lang.reflect.Method;
 
 import org.anon.smart.smcore.annot.MethodAnnotate;
+import org.anon.smart.smcore.annot.ServiceAnnotate;
 
 import org.anon.utilities.gconcurrent.DefaultNodeDetails;
 import org.anon.utilities.exception.CtxException;
@@ -60,6 +61,18 @@ public class TransitionNodeDetails extends DefaultNodeDetails
         throws CtxException
     {
         super(cls, mthd, annot.parms());
+        _from = annot.from();
+        _to = annot.to();
+        _after = annot.runAfter();
+        _before = annot.runBefore();
+        _name = annot.name();
+        System.out.println("Annotate is: " + annot + ":" + _after);
+    }
+
+    public TransitionNodeDetails(Class cls, Method mthd, ServiceAnnotate annot, String parms)
+        throws CtxException
+    {
+        super(cls, mthd, parms);
         _from = annot.from();
         _to = annot.to();
         _after = annot.runAfter();

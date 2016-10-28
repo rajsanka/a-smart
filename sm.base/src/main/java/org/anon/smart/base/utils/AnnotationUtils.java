@@ -47,10 +47,14 @@ import java.lang.reflect.Field;
 import org.anon.smart.base.annot.BaseAnnotate;
 import org.anon.smart.base.annot.ConfigAnnotate;
 import org.anon.smart.base.annot.EventAnnotate;
+import org.anon.smart.base.annot.MessageAnnotate;
 import org.anon.smart.base.annot.SmartDataAnnotate;
 import org.anon.smart.base.annot.PrimeDataAnnotate;
 import org.anon.smart.base.annot.KeyAnnotate;
 import org.anon.smart.base.annot.Synthetic;
+import org.anon.smart.base.annot.StatesAnnotate;
+import org.anon.smart.base.annot.StateAnnotate;
+import org.anon.smart.base.annot.DestinationAnnotate;
 
 import static org.anon.utilities.services.ServiceLocator.*;
 
@@ -84,6 +88,27 @@ public class AnnotationUtils
     {
         assertion().assertNotNull(data, "Cannot find the name of a null data");
         return className(data.getClass());
+    }
+
+    public static String crossClassName(Class cls)
+        throws CtxException
+    {
+        String ret = null;
+        Annotation annot = reflect().getAnyAnnotation(cls, BaseAnnotate.class.getName());
+        if (annot != null)
+        {
+            try
+            {
+                Class acls = annot.annotationType();
+                ret = (String)acls.getDeclaredMethod("name").invoke(annot);
+            }
+            catch (Exception e)
+            {
+                except().rt(e, new CtxException.Context("Exception", e.getMessage()));
+            }
+        }
+
+        return ret;
     }
 
     public static String className(Class cls)
@@ -124,12 +149,10 @@ public class AnnotationUtils
     {
         assertion().assertNotNull(cls, "Cannot find the config of a null class");
         SmartDataAnnotate annot = (SmartDataAnnotate)reflect().getAnnotation(cls, SmartDataAnnotate.class);
-        System.out.println("Annot is: " + annot);
         if (annot != null)
             return annot.config();
 
         PrimeDataAnnotate pannot = (PrimeDataAnnotate)reflect().getAnnotation(cls, PrimeDataAnnotate.class);
-        System.out.println("Annot is: " + pannot);
         if (pannot != null)
             return pannot.config();
 
@@ -141,14 +164,27 @@ public class AnnotationUtils
     {
         assertion().assertNotNull(cls, "Cannot find the commit of a null class");
         SmartDataAnnotate annot = (SmartDataAnnotate)reflect().getAnnotation(cls, SmartDataAnnotate.class);
-        System.out.println("Annot is: " + annot);
         if (annot != null)
             return annot.commit();
 
         PrimeDataAnnotate pannot = (PrimeDataAnnotate)reflect().getAnnotation(cls, PrimeDataAnnotate.class);
-        System.out.println("Annot is: " + pannot);
         if (pannot != null)
             return pannot.commit();
+
+        return null;
+    }
+
+    public static String storeInFor(Class cls)
+        throws CtxException
+    {
+        assertion().assertNotNull(cls, "Cannot find the commit of a null class");
+        SmartDataAnnotate annot = (SmartDataAnnotate)reflect().getAnnotation(cls, SmartDataAnnotate.class);
+        if (annot != null)
+            return annot.store();
+
+        PrimeDataAnnotate pannot = (PrimeDataAnnotate)reflect().getAnnotation(cls, PrimeDataAnnotate.class);
+        if (pannot != null)
+            return pannot.store();
 
         return null;
     }
@@ -162,6 +198,50 @@ public class AnnotationUtils
             return annot.filter();
 
         return null;
+    }
+
+    public static String crosspostFor(Class cls)
+        throws CtxException
+    {
+        assertion().assertNotNull(cls, "Cannot find the filter for a null class");
+        MessageAnnotate annot = (MessageAnnotate)reflect().getAnnotation(cls, MessageAnnotate.class);
+        if (annot != null)
+            return annot.crosspost();
+
+        return null;
+    }
+
+    public static boolean postflowadmin(Class cls)
+        throws CtxException
+    {
+        assertion().assertNotNull(cls, "Cannot find the filter for a null class");
+        MessageAnnotate annot = (MessageAnnotate)reflect().getAnnotation(cls, MessageAnnotate.class);
+        if (annot != null)
+            return annot.postflowadmin();
+
+        return false;
+    }
+
+    public static int timeoutFor(Class cls, String sname)
+        throws CtxException
+    {
+        assertion().assertNotNull(cls, "Cannot find the timeout for a null class");
+        StatesAnnotate states = (StatesAnnotate)reflect().getAnyAnnotation(cls, StatesAnnotate.class.getName());
+        assertion().assertNotNull(states, "Cannot find time out for a class with no states defined.");
+        StateAnnotate[] state = states.states();
+        assertion().assertNotNull(state, "Cannot find time out for a class with no states defined.");
+        int timeout = -1;
+        for (int i = 0; i < state.length; i++)
+        {
+            if (state[i].name().equals(sname))
+            {
+                System.out.println("Checking timeout for: " + sname + ":" + state[i].timeout());
+                timeout = state[i].timeout();
+                break;
+            }
+        }
+
+        return timeout;
     }
 
     public static Class[] keyTypes(Class cls)
@@ -178,6 +258,18 @@ public class AnnotationUtils
                 ret[i] = flds[i].getType();
         }
         return ret;
+    }
+
+    public static Field destinations(Class cls)
+        throws CtxException
+    {
+        assertion().assertNotNull(cls, "Cannot find the destination for null class");
+        Field[] flds = reflect().getAnnotatedFields(cls, DestinationAnnotate.class);
+        if ((flds != null) && (flds.length > 0))
+        {
+            return flds[0];
+        }
+        return null;
     }
 
     public static boolean isConfig(Class cls)

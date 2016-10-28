@@ -48,6 +48,21 @@ import org.anon.utilities.exception.CtxException;
 
 public interface Store extends Repeatable
 {
+    public static class SearchResult
+    {
+        private Object _key;
+        private Object _value;
+
+        public SearchResult(Object k, Object val)
+        {
+            _key = k;
+            _value = val;
+        }
+
+        public Object getKey() { return _key; }
+        public Object getValue() { return _value; }
+    }
+
     public void setup(String name, StoreConfig config)
         throws CtxException;
 
@@ -58,6 +73,13 @@ public interface Store extends Repeatable
     	throws CtxException;
 
     public void close()
+        throws CtxException;
+
+    public int searchOrder();
+
+    public boolean searchHasOnlyKeys();
+
+    public List<SearchResult> search(String group, Object query, int size, int pn, int ps, String sby, boolean asc)
         throws CtxException;
 }
 

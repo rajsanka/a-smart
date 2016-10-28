@@ -51,5 +51,7 @@ import java.lang.annotation.Target;
 public @interface MessageAnnotate
 {
     public String name();
+    public String crosspost();
+    public boolean postflowadmin();
 }
 

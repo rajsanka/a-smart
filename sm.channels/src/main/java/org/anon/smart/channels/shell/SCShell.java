@@ -130,5 +130,24 @@ public class SCShell
     {
         return _channels.get(id);
     }
+
+    public SmartChannel channelFor(String nm)
+    {
+        if (nm == null)
+            return null;
+
+        for (SmartChannel chnl : _channels.values())
+        {
+            SCConfig cfg = chnl.config();
+            if (cfg instanceof ExternalConfig)
+            {
+                ExternalConfig ecfg = (ExternalConfig)cfg;
+                if ((ecfg.name() != null) && (ecfg.name().equals(nm)))
+                    return chnl;
+            }
+        }
+
+        return null;
+    }
 }
 

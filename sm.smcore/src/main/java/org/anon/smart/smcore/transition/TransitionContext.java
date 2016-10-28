@@ -41,10 +41,12 @@
 
 package org.anon.smart.smcore.transition;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.anon.smart.atomicity.Atomicity;
 import org.anon.smart.base.dspace.DSpaceService;
@@ -57,11 +59,11 @@ import org.anon.smart.smcore.events.SmartEvent;
 import org.anon.smart.smcore.data.SmartDataED;
 import org.anon.smart.smcore.data.SmartPrimeData;
 import org.anon.smart.smcore.channel.server.CrossLinkEventRData;
-import org.anon.smart.smcore.monitor.MetricsManager;
-import org.anon.smart.smcore.monitor.MonitorAction;
 import org.anon.smart.smcore.transition.graph.TransitionGraphExecutor;
 import org.anon.smart.smcore.transition.parms.TransitionProbeParms;
 import org.anon.smart.smcore.transition.atomicity.TAtomicity;
+import org.anon.smart.smcore.transition.plugin.PluginManager;
+import org.anon.smart.smcore.data.datalinks.DataLinker;
 
 import org.anon.utilities.cthreads.CThreadContext;
 import org.anon.utilities.exception.CtxException;
@@ -83,11 +85,15 @@ public class TransitionContext extends AbstractGraphContext implements CThreadCo
     private MessageSource _source;
     private SmartDataED _primeED;
     private String _flow;
+    private DataLinker _linker;
+    private Map<String, Object> _txnSpecific;
 
     public TransitionContext(Object data, ExecutorService service, Graph graph, MessageSource src)
         throws CtxException
     {
         super(graph, service);
+        _linker = new DataLinker();
+        _txnSpecific = new ConcurrentHashMap<String, Object>();
         _rData = new CrossLinkEventRData(data);
         _event = _rData.event();
         _prime = _event.smart___primeData();
@@ -110,16 +116,11 @@ public class TransitionContext extends AbstractGraphContext implements CThreadCo
     	_source.doneMessage();
     }
     
-    /** Metrics 
-     * @throws CtxException **/
-    public void eventSuccess() throws CtxException
+    public void eventSuccess() 
+        throws CtxException
     {
-    	MonitorAction action = MonitorAction.EVENTEXECUTED;
-        MetricsManager.handleMetricsfor(transaction().getTransaction(TenantConstants.MONITOR_SPACE),
-        		_event, action);
-    	
+        PluginManager.eventProcessed(_event);
     }
-    /** Metrics **/
     
     protected ExecuteGraph executorFor(GraphRuntimeNode rtnde, ProbeParms parms)
         throws CtxException
@@ -157,5 +158,15 @@ public class TransitionContext extends AbstractGraphContext implements CThreadCo
     }
 
     public TTransaction transaction() { return _transaction; }
+    public DataLinker getLinker() { return _linker; }
+    public void storeTxnSpecific(String key, Object obj)
+    {
+        _txnSpecific.put(key, obj);
+    }
+
+    public Object getTxnSpecific(String key)
+    {
+        return _txnSpecific.get(key);
+    }
 }
 

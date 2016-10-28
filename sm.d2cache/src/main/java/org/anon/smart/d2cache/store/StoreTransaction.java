@@ -52,14 +52,15 @@ public interface StoreTransaction
     public Collection<StoreRecord> allRecords();
     public Collection<StoreRecord> getRecords(String group);
     public StoreRecord recordFor(Object primaryKey);
-    public StoreRecord addRecord(String group, Object primarykey, Object curr, Object orig)
+    public StoreRecord addRecord(String group, Object primarykey, Object curr, Object orig, boolean isnew)
         throws CtxException;
-    public StoreRecord addRecord(String group, Object primarykey, Object curr, Object orig, Object relatedKey)
+    public StoreRecord addRecord(String group, Object primarykey, Object curr, Object orig, Object relatedKey, boolean isnew)
             throws CtxException;
     public void commit()
         throws CtxException;
     public void rollback()
         throws CtxException;
     public boolean waitToComplete();
+    public boolean shouldStore(String storeIn);
 }
 

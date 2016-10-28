@@ -58,6 +58,7 @@ import org.anon.smart.base.tenant.shell.CrossLinkRuntimeShell;
 import org.anon.smart.base.tenant.shell.DeploymentShell;
 import org.anon.smart.deployment.Deployment;
 import org.anon.smart.deployment.Artefact;
+import org.anon.smart.base.annot.KeyAnnotate;
 
 import static org.anon.utilities.services.ServiceLocator.*;
 import static org.anon.utilities.objservices.ObjectServiceLocator.*;
@@ -70,6 +71,8 @@ public class SmartTenant implements RelatedObject, TenantConstants,
 
 	private static final String FLOW_FEATURE_SEPARATOR = ":";
 
+    private static final String LINK_SEPARATOR = "|";
+
 	static {
 		/*
 		 * GROUP_MAPPING.put(USERS_SPACE, STANDARD_GROUP);
@@ -81,9 +84,14 @@ public class SmartTenant implements RelatedObject, TenantConstants,
 		 */
 	}
 
+    @KeyAnnotate (keys="_name")
 	private String _name;
 	private boolean _platformOwner;
 	private List<FeatureName> _enabledFeatureList;
+    private List<String> _domain;
+    private String _clientOf;
+    private String _controlsAdmin;
+    private List<ApplicationDetails> _applications;
 	
 
 	private transient SmartLoader _loader;
@@ -91,11 +99,14 @@ public class SmartTenant implements RelatedObject, TenantConstants,
 	private transient CrossLinkRuntimeShell _runtimeShell;
 	private transient DeploymentShell _deploymentShell;
 	private transient TenantAdmin _admin;
+    private transient boolean _isNew = false;
 
 	public SmartTenant(String name) throws CtxException {
 		_name = name;
 		_enabledFeatureList = new ArrayList<FeatureName>();
+        _applications = new ArrayList<ApplicationDetails>();
 		initTenant();
+        _isNew = true;
 	}
 
 	private void initTenant() throws CtxException {
@@ -127,6 +138,28 @@ public class SmartTenant implements RelatedObject, TenantConstants,
 	public void setAdmin(TenantAdmin admin) {
 		_admin = admin;
 	}
+
+    public void setDomain(String domain)
+        throws CtxException
+    {
+        String[] d = value().listAsString(domain);
+        _domain = new ArrayList<String>();
+        for (int i = 0; i < d.length; i++)
+            _domain.add(d[i]);
+    }
+
+    public String[] getDomain()
+    {
+        if (_domain != null)
+            return _domain.toArray(new String[0]);
+        else
+            return null;
+    }
+
+    public void setClientOf(String clnt)
+    {
+        _clientOf = clnt;
+    }
 
 	private void createShells() throws CtxException {
 		_data = new HashMap<String, CrossLinkDataShell>();
@@ -196,9 +229,26 @@ public class SmartTenant implements RelatedObject, TenantConstants,
 		}
 		if (_deploymentShell != null)
 			_deploymentShell.cleanup();
+
+        //dereference so gc can collect all the objects.
+        if (_loader != null)
+        {
+            _loader.cleanup();
+            _loader.setRelatedTo(null);
+            _loader = null;
+        }
+        _deploymentShell = null;
+        _runtimeShell = null;
+        _data = null;
 	}
 
 	public void enableFlow(Object amodel, Artefact[] artefacts, Deployment d)
+			throws CtxException 
+    {
+        enableFlow(amodel, artefacts, d, true);
+    }
+
+	public void enableFlow(Object amodel, Artefact[] artefacts, Deployment d, boolean lookup)
 			throws CtxException {
 		// for now. If anything more need to add here
 		CrossLinkDataShell shell = _data.get(FLOW_GROUP);
@@ -215,8 +265,29 @@ public class SmartTenant implements RelatedObject, TenantConstants,
 			except().rt(e, new CtxException.Context("", ""));
 		}
 		_runtimeShell
-				.enabledFlowClazzez(amodel, deployed.toArray(new Class[0]));
+				.enabledFlowClazzez(amodel, deployed.toArray(new Class[0]), lookup);
 	}
+
+    public void enabledApplication(String nm, String pkg)
+        throws CtxException
+    {
+        ApplicationDetails det = null;
+        for (int i = 0; (_applications != null) && (i < _applications.size()); i++)
+        {
+            if (_applications.get(i).name.equals(nm))
+            {
+                det = _applications.get(i);
+                det.setPackage(pkg);
+                break;
+            }
+        }
+
+        if (det == null)
+        {
+            det = new ApplicationDetails(nm, pkg);
+            _applications.add(det);
+        }
+    }
 
 	public List<Object> smart___keys() throws CtxException {
 		List<Object> keys = new ArrayList<Object>();
@@ -228,6 +299,18 @@ public class SmartTenant implements RelatedObject, TenantConstants,
 		return TENANTGROUP;
 	}
 
+    public boolean smart___isNew()
+        throws CtxException
+    {
+        return _isNew;
+    }
+
+    public void smart___resetNew()
+        throws CtxException
+    {
+        _isNew = false;
+    }
+
 	@Override
 	public void smart___initOnLoad() throws CtxException {
 		System.out.println("Initializing Tenant after loading from store.."+_name+":Features::"+_enabledFeatureList);
@@ -238,10 +321,15 @@ public class SmartTenant implements RelatedObject, TenantConstants,
 
 	private void enableFlows() throws CtxException {
 		Map<String, List<String>> flowFeatureMap = new HashMap<String, List<String>>();
+        Map<String, Map<String, List<String>>> links = new HashMap<String, Map<String, List<String>>>();
 		
 		for(FeatureName feature: _enabledFeatureList)
 		{
-			String[] flowFeatureStr = feature.toString().split(FLOW_FEATURE_SEPARATOR, 2);
+            //standard features are enabled for the owner as they are deployed.
+            if (_platformOwner && feature.isStandard())
+                continue;
+
+			String[] flowFeatureStr = feature.getName().split(FLOW_FEATURE_SEPARATOR, 2);
 			assertion().assertTrue((flowFeatureStr.length == 2), feature.toString()+" is NOT WELL FORMED");
 			String flowName = flowFeatureStr[0];
 			String featureName = flowFeatureStr[1];
@@ -255,27 +343,64 @@ public class SmartTenant implements RelatedObject, TenantConstants,
 				featureList.add(featureName);
 				flowFeatureMap.put(flowName, featureList);
 			}
+
+            if ((feature.getLinks() != null) && (feature.getLinks().length() > 0))
+            {
+                String[] alllnks = feature.getLinks().split(";");
+                Map<String, List<String>> lnks = links.get(flowName);
+                if (lnks == null)
+                    lnks = new HashMap<String, List<String>>();
+                for (int i = 0; (alllnks != null) && (i < alllnks.length); i++)
+                {
+                    String[] vals = alllnks[i].split("\\" + LINK_SEPARATOR);
+                    assertion().assertTrue((vals.length == 2), "Not stored correctly: " + alllnks[i]);
+                    List<String> onelnk = lnks.get(vals[0]);
+                    if (onelnk == null)
+                        onelnk = new ArrayList<String>();
+
+                    onelnk.add(vals[1]);
+                    lnks.put(vals[0], onelnk);
+                }
+                links.put(flowName, lnks);
+            }
 		}
 		
-		System.out.println("Reenabling Flows:"+flowFeatureMap);
+		System.out.println("Reenabling Flows:"+flowFeatureMap + ":" + links);
 		
 		for(Map.Entry<String, List<String>> me : flowFeatureMap.entrySet())
 		{
 			//System.out.println("Enabling:"+me.getKey()+"::"+me.getValue());
             //TODO: need to check how to reenable the links
-			_deploymentShell.enableForMe(me.getKey(), me.getValue().toArray(new String[0]), new HashMap<String, String>());
+            Map<String, List<String>> lnks = links.get(me.getKey());
+            if (lnks == null)
+                lnks = new HashMap<String, List<String>>();
+			_deploymentShell.enableForMe(me.getKey(), me.getValue().toArray(new String[0]), lnks);
 		}
 		
 	}
 
-	public void registerEnabledFlow(String name, String[] features) {
+	public void registerEnabledFlow(String name, String[] features, Map<String, List<String>> lnks, boolean std) {
 		for(String feature : features)
         {
-            if (!_enabledFeatureList.contains(name + FLOW_FEATURE_SEPARATOR + feature))
-                _enabledFeatureList.add(new FeatureName(name+FLOW_FEATURE_SEPARATOR+feature));
+            FeatureName nm = new FeatureName(name+FLOW_FEATURE_SEPARATOR+feature, std);
+            if (!_enabledFeatureList.contains(nm))
+            {
+                nm.addLink(lnks);
+                _enabledFeatureList.add(nm);
+            }
         }
         System.out.println("Currently enabled flows are: " + _enabledFeatureList);
 	}
+
+    public void registerLinks(String name, Map<String, List<String>> lnks)
+    {
+        for (int i = 0; i < _enabledFeatureList.size(); i++)
+        {
+            FeatureName nm = _enabledFeatureList.get(i);
+            if (nm.getName().startsWith(name))
+                nm.addLink(lnks);
+        }
+    }
 	
 	public Set<String> listEnableFlows()
 	    throws CtxException
@@ -290,13 +415,48 @@ public class SmartTenant implements RelatedObject, TenantConstants,
         }
 	    return enabledFlows;
 	}
+
+    public boolean controlsAdmin()
+    {
+        return ((_controlsAdmin != null) && (_controlsAdmin.equals("YES")));
+    }
+
+    public void setControlsAdmin(String val)
+    {
+        _controlsAdmin = val;
+    }
 	
 	private class FeatureName{
 		private String _name;
+        private String _links;
+        private boolean _isStandard;
 		FeatureName(String name)
 		{
 			_name = name;
+            _isStandard = false;
 		}
+
+        FeatureName(String name, boolean std)
+        {
+            _name = name;
+            _isStandard = std;
+        }
+
+        void addLink(Map<String, List<String>> lnks)
+        {
+            for(String nm : lnks.keySet())
+            {
+                List<String> val = lnks.get(nm);
+                for (int i = 0; (val != null) && (i < val.size()); i++)
+                {
+                    String lnk = nm + LINK_SEPARATOR + val.get(i);
+                    if ((_links == null) || (_links.length() <= 0))
+                        _links = lnk;
+                    else
+                        _links = _links + ";" + lnk;
+                }
+            }
+        }
 
         @Override
         public boolean equals(Object o)
@@ -314,9 +474,35 @@ public class SmartTenant implements RelatedObject, TenantConstants,
         {
             return _name.hashCode();
         }
+
+        public String getName() { return _name; }
+        public String getLinks() { return _links; }
 		
 		public String toString() { return _name; }
+        public boolean isStandard() { return _isStandard; }
 	}
+
+    private class ApplicationDetails implements java.io.Serializable
+    {
+        private String name;
+        private String enablePkg;
+
+        private ApplicationDetails(String nm, String ep)
+        {
+            name = nm;
+            enablePkg = ep;
+        }
+
+        private void setPackage(String ep)
+        {
+            enablePkg = ep;
+        }
+    }
+
+    public void smart___setIsNew(boolean n)
+    {
+        _isNew = n;   
+    }
 }
 
 

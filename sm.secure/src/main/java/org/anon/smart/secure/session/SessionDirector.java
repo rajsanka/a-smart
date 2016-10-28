@@ -44,6 +44,7 @@ package org.anon.smart.secure.session;
 import java.util.UUID;
 
 import org.anon.smart.base.tenant.SmartTenant;
+import org.anon.smart.base.tenant.CrossLinkSmartTenant;
 import org.anon.smart.base.tenant.shell.RuntimeShell;
 import org.anon.smart.smcore.transition.TransitionContext;
 import org.anon.smart.secure.inbuilt.data.Session;
@@ -85,13 +86,19 @@ public class SessionDirector
         return (Session)sess;
     }
 
+    public static void removeSession()
+        throws CtxException
+    {
+        threads().addToContextLocals(SESSION_STORE_NAME, null);
+    }
+
     public static void setupContext(Object session)
         throws CtxException
     {
         threads().addToContextLocals(SESSION_STORE_NAME, session);
     }
 
-    public static Object crosslinkSessionIn(String sessId, SmartTenant tenant)
+    public static Object crosslinkSessionIn(String sessId, CrossLinkSmartTenant tenant)
         throws CtxException
     {
         CrossLinkAny cany = new CrossLinkAny(SessionDirector.class.getName(), tenant.getRelatedLoader());
@@ -99,6 +106,13 @@ public class SessionDirector
         if (obj != null)
             cany.invoke("setupContext", new Class[] { Object.class }, new Object[] { obj });
         return obj;
+    }
+
+    public static void removeSessionFrom(CrossLinkSmartTenant tenant)
+        throws CtxException
+    {
+        CrossLinkAny cany = new CrossLinkAny(SessionDirector.class.getName(), tenant.getRelatedLoader());
+        cany.invoke("removeSession");
     }
 
     public static Session currentSession()

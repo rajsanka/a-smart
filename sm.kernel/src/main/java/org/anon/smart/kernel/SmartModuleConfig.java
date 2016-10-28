@@ -49,13 +49,19 @@ import org.anon.smart.channels.shell.SCShell;
 import org.anon.smart.smcore.anatomy.SMCoreConfig;
 import org.anon.smart.kernel.config.SmartConfig;
 import org.anon.smart.kernel.config.ChannelConfig;
+import org.anon.smart.monitor.anatomy.MonitorStartConfig;
 import org.anon.smart.smcore.channel.server.EventServerConfig;
+import org.anon.smart.smcore.channel.server.CustomServerConfig;
+import org.anon.smart.smcore.channel.server.CustomTCPConfig;
 import org.anon.smart.smcore.channel.server.UploadServerConfig;
 import org.anon.smart.secure.channel.server.SecureEventServerConfig;
+import org.anon.smart.secure.channel.server.SecureCustomServerConfig;
+import org.anon.smart.secure.channel.server.SecureUploadServerConfig;
+import org.anon.smart.secure.anatomy.SecureConfig;
 
 import org.anon.utilities.exception.CtxException;
 
-public class SmartModuleConfig implements SMCoreConfig
+public class SmartModuleConfig implements SMCoreConfig, SecureConfig, MonitorStartConfig
 {
     private ExternalConfig[] _channels;
     private String _configDir;
@@ -85,14 +91,23 @@ public class SmartModuleConfig implements SMCoreConfig
         boolean https = (cfg.getProtocol().equals("https"));
         int[] ports = cfg.getPortRange();
         int port = SCShell.getNextAvailablePort(ports);
+        String translator = cfg.getTranslator();
         
         if (type.equals("event"))
-            ccfg = new EventServerConfig(port, https);
+            ccfg = new EventServerConfig(cfg.getName(), port, https);
         //if the channel type is upload create a httpuploadConfig
         else if (type.equals("upload"))
-        	ccfg = new UploadServerConfig(port, https);
+        	ccfg = new UploadServerConfig(cfg.getName(), port, https);
         else if (type.equals("secureevent"))
-            ccfg = new SecureEventServerConfig(port, https);
+            ccfg = new SecureEventServerConfig(cfg.getName(), port, https);
+        else if (type.equals("secureupload"))
+            ccfg = new SecureUploadServerConfig(cfg.getName(), port, https);
+        else if (type.equals("custom"))
+            ccfg = new CustomServerConfig(cfg.getName(), port, https, translator);
+        else if (type.equals("securecustom"))
+            ccfg = new SecureCustomServerConfig(cfg.getName(), port, https, translator);
+        else if (type.equals("tcpcustom"))
+            ccfg = new CustomTCPConfig(cfg.getName(), port, translator, cfg.getConfigurator(), cfg.getParams());
         return ccfg;
     }
 

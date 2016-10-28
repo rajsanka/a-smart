@@ -41,6 +41,7 @@
 
 package org.anon.smart.d2cache.store;
 
+import java.util.List;
 
 import static org.anon.utilities.services.ServiceLocator.*;
 import org.anon.utilities.exception.CtxException;
@@ -80,6 +81,23 @@ public abstract class AbstractStore implements Store
         throws CtxException
     {
         _connection.close();
+    }
+
+    public int searchOrder()
+    {
+        return Integer.MAX_VALUE;
+    }
+
+    public boolean searchHasOnlyKeys()
+    {
+        return true;
+    }
+
+    public List<Store.SearchResult> search(String group, Object query, int size, int pn, int ps, String sby, boolean asc)
+        throws CtxException
+    {
+        //not supported.
+        return null;
     }
 }
 

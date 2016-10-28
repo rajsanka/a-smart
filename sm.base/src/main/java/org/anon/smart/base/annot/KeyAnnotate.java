@@ -46,6 +46,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.anon.smart.d2cache.annot.PrimeKeyAnnotate;
+import org.anon.smart.d2cache.annot.CacheKeyAnnotate;
+
+@PrimeKeyAnnotate
+@CacheKeyAnnotate
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface KeyAnnotate

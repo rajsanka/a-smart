@@ -50,6 +50,7 @@ import org.anon.smart.d2cache.segment.ReaderFactory;
 import org.anon.smart.d2cache.segment.ReplicationWriter;
 import org.anon.smart.d2cache.segment.RepositorySegment;
 import org.anon.smart.d2cache.store.Store;
+import org.anon.smart.d2cache.store.StoreConfig;
 import org.anon.smart.d2cache.store.StoreConnection;
 import org.anon.smart.d2cache.store.index.solr.BasicSolrConfig;
 import org.anon.smart.d2cache.store.index.solr.SolrConfig;
@@ -138,9 +139,9 @@ public abstract class AbstractD2Cache implements D2Cache {
 	
 	protected CSegment createStoreSegment() throws CtxException
 	{
-		HBaseConfig hbaseConfig = (HBaseConfig) _config.getStoreConfig();
+		StoreConfig storeconfig =  _config.getStoreConfig();
 		CSegment repoSegment = new RepositorySegment();
-		repoSegment.setupSegment(_name, hbaseConfig);
+		repoSegment.setupSegment(_name, storeconfig);
 		
 		return repoSegment;
 		

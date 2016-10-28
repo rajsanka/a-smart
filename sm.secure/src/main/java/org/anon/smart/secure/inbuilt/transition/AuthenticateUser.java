@@ -41,14 +41,21 @@
 
 package org.anon.smart.secure.inbuilt.transition;
 
+import java.util.List;
+
 import org.anon.smart.secure.inbuilt.data.Session;
 import org.anon.smart.secure.inbuilt.data.iden.IdentityType;
 import org.anon.smart.secure.inbuilt.data.iden.SCredential;
 import org.anon.smart.secure.inbuilt.data.auth.AuthDetails;
 import org.anon.smart.secure.inbuilt.data.auth.SAuthenticator;
 import org.anon.smart.secure.inbuilt.events.Authenticate;
+import org.anon.smart.secure.inbuilt.events.Logout;
 import org.anon.smart.secure.inbuilt.responses.SessionDetails;
+import org.anon.smart.secure.inbuilt.responses.SecurityResponse;
 import org.anon.smart.secure.session.SessionDirector;
+import org.anon.smart.secure.inbuilt.responses.PermittedFeatures;
+import org.anon.smart.secure.inbuilt.data.SmartRole;
+import org.anon.smart.secure.inbuilt.data.SmartUser;
 
 import static org.anon.utilities.services.ServiceLocator.*;
 
@@ -72,6 +79,28 @@ public class AuthenticateUser
         assertion().assertTrue(det.isVerified(), "Invalid credentials for: " + authen.getIdentity());
         Session sess = SessionDirector.createSession(det);
         SessionDetails details = new SessionDetails(sess.getSessionId());
+    }
+
+    public void logoutUser(Logout event)
+        throws CtxException
+    {
+        //This does nothing but change the state of the session.
+        SecurityResponse resp = new SecurityResponse("Logged out successfully");
+    }
+
+    public boolean permittedFeatures()
+        throws CtxException
+    {
+        Session sess = SessionDirector.currentSession();
+        assertion().assertNotNull(sess, "Please login to retrieve the permitted features.");
+        SmartUser user = sess.getUser();
+        List<SmartRole> roles = user.lookupRoles();
+        PermittedFeatures features = new PermittedFeatures();
+        
+        for (int i = 0; (roles != null) && (i < roles.size()); i++)
+            features.addPermittedFrom(roles.get(i));
+
+        return false;
     }
 }
 

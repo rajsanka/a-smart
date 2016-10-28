@@ -113,7 +113,8 @@ public class TestClient
         throws Exception
     {
         String home = System.getenv("HOME");
-        String jar = home + "/.m2/repository/org/anon/sampleapp/sampleapp/1.0-SNAPSHOT/sampleapp-1.0-SNAPSHOT.jar";
+        String version = System.getProperty("smart.version");
+        String jar = home + "/.m2/repository/org/anon/sampleapp/sampleapp/" + version + "/sampleapp-" + version + ".jar";
         return deployJar(port, jar, soa);
     }
 
@@ -155,7 +156,7 @@ public class TestClient
         ResponseCollector collect = new ResponseCollector(wait);
         Rectifier rr = new Rectifier();
         rr.addStep(collect);
-        HTTPConfig ccfg = new HTTPConfig(port, false);
+        HTTPConfig ccfg = new HTTPConfig("Test", port, false);
         ccfg.setClient();
         ccfg.setServer(server);
         ccfg.setRectifierInstinct(rr, new TestDataFactory());
@@ -175,6 +176,33 @@ public class TestClient
         }
 
         return null;
+    }
+
+    public String get(int port, String server, String uri, boolean wait)
+        throws Exception
+    {
+        String ret = "";
+        JSON jret = null;
+        ResponseCollector collect = new ResponseCollector(wait);
+        Rectifier rr = new Rectifier();
+        rr.addStep(collect);
+        HTTPConfig ccfg = new HTTPConfig("Test", port, false);
+        ccfg.setClient();
+        ccfg.setServer(server);
+        ccfg.setRectifierInstinct(rr, new TestDataFactory());
+        HTTPClientChannel cchnl = (HTTPClientChannel)_shell.addChannel(ccfg);
+        cchnl.connect();
+        cchnl.get(uri);
+        if (wait)
+        {
+            collect.waitForResponse();
+            ret = collect.getResponse();
+            cchnl.disconnect();
+            System.out.println("Got: " + ret);
+            return ret;
+        }
+
+        return "";
     }
 }
 

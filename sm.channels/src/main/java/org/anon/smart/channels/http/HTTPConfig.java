@@ -49,6 +49,7 @@ import org.anon.smart.channels.distill.Rectifier;
 
 public class HTTPConfig implements ExternalConfig
 {
+    private String _name;
     private int _port;
     private boolean _client;
     private boolean _secure;
@@ -58,8 +59,9 @@ public class HTTPConfig implements ExternalConfig
     private String _keyAlgorithm;
     private DataInstincts _instinct;
 
-    public HTTPConfig(int port, boolean secure)
+    public HTTPConfig(String nm, int port, boolean secure)
     {
+        _name = nm;
         _port = port;
         _secure = secure;
         _server = "localhost";
@@ -108,5 +110,7 @@ public class HTTPConfig implements ExternalConfig
         else
             return new HTTPClientFactory();
     }
+
+    public String name() { return _name; }
 }
 

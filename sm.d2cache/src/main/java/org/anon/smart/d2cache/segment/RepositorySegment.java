@@ -46,6 +46,9 @@ import java.util.List;
 import org.anon.smart.d2cache.store.Store;
 import org.anon.smart.d2cache.store.StoreConfig;
 import org.anon.smart.d2cache.store.StoreItem;
+import org.anon.smart.d2cache.store.repository.mysql.MySQLConfig;
+import org.anon.smart.d2cache.store.repository.mysql.MySQLConnection;
+import org.anon.smart.d2cache.store.repository.mysql.MySQLStore;
 import org.anon.smart.d2cache.store.repository.hbase.HBaseConnection;
 import org.anon.smart.d2cache.store.repository.hbase.HBaseStore;
 import org.anon.utilities.exception.CtxException;
@@ -61,11 +64,14 @@ public class RepositorySegment implements CSegment {
 
 	@Override
 	public void setupSegment(String name, StoreConfig cfg)
-			throws CtxException {
-		_store = new HBaseStore(new HBaseConnection());
+			throws CtxException 
+    {
+        System.out.println("Got config as: " + cfg);
+        if (cfg instanceof MySQLConfig)
+            _store = new MySQLStore(new MySQLConnection());
+        else
+            _store = new HBaseStore(new HBaseConnection());
 		_store.setup(name, cfg);
-		
-
 	}
 
 	@Override
@@ -85,6 +91,8 @@ public class RepositorySegment implements CSegment {
     {
         if (_store != null)
             _store.close();
+
+        _store = null;
     }
 
 }

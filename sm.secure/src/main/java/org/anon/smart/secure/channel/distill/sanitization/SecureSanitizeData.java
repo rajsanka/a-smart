@@ -45,6 +45,7 @@ import java.util.UUID;
 
 import org.anon.smart.channels.data.PData;
 import org.anon.smart.base.tenant.SmartTenant;
+import org.anon.smart.base.tenant.CrossLinkSmartTenant;
 import org.anon.smart.smcore.channel.internal.MessagePData;
 import org.anon.smart.smcore.channel.server.EventPData;
 import org.anon.smart.smcore.channel.distill.sanitization.SanitizeData;
@@ -57,6 +58,8 @@ import org.anon.utilities.exception.CtxException;
 
 public class SecureSanitizeData extends SanitizeData
 {
+    private static final int INVALID_SESSION = 1000002;
+
     public SecureSanitizeData()
     {
         super();
@@ -68,21 +71,26 @@ public class SecureSanitizeData extends SanitizeData
     {
         super.sanitizePData(data, populate);
         if (data instanceof MessagePData)
+        {
+            SecureSearchedData spopulate = (SecureSearchedData)populate;
+            MessagePData mpdata = (MessagePData)data;
+            spopulate.setupSearchContext(mpdata.eventName(), mpdata.flow());
             return;
+        }
 
         //search for session.
         EventPData epdata = (EventPData)data;
         SecureSearchedData spopulate = (SecureSearchedData)populate;
-        spopulate.setupSearchContext(epdata.eventName());
+        spopulate.setupSearchContext(epdata.eventName(), epdata.flow());
         if (epdata.sessionId() != null)
         {
             Object session = searchSession(epdata.sessionId(), populate.tenant());
-            assertion().assertNotNull(session, "Cannot find session specified. Please login before executing.");
+            assertion().assertNotNullWithCode(session, INVALID_SESSION, "Cannot find session specified. Please login before executing.");
             spopulate.setSession(session);
         }
     }
 
-    private Object searchSession(UUID sessid, SmartTenant tenant)
+    private Object searchSession(UUID sessid, CrossLinkSmartTenant tenant)
         throws CtxException
     {
         return SessionDirector.crosslinkSessionIn(sessid.toString(), tenant);

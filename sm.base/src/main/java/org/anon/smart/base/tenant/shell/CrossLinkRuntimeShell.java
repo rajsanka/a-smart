@@ -65,7 +65,7 @@ public class CrossLinkRuntimeShell extends CrossLinker
         if (method.equals("lookupFor") || method.equals("searchFor"))
             return new Class[] { String.class, String.class, Object.class };
         else if (method.equals("enabledFlowClazzez"))
-            return new Class[] { Object.class, Class[].class };
+            return new Class[] { Object.class, Class[].class, boolean.class };
         else if (method.equals("commitInternalObjects"))
             return new Class[] { String.class, Object[].class };
 
@@ -90,10 +90,10 @@ public class CrossLinkRuntimeShell extends CrossLinker
         return (List<Object>)linkMethod("searchFor", spacemodel, group, query);
     }
 
-    public void enabledFlowClazzez(Object model, Class[] clazzez)
+    public void enabledFlowClazzez(Object model, Class[] clazzez, boolean lookup)
         throws CtxException
     {
-        linkMethod("enabledFlowClazzez", model, clazzez);
+        linkMethod("enabledFlowClazzez", model, clazzez, lookup);
     }
 
     public void commitInternalObjects(String spacemodel, Object[] objs)

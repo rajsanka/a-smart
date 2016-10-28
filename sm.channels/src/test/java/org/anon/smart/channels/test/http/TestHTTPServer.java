@@ -63,7 +63,7 @@ public class TestHTTPServer
     {
         Rectifier r = new Rectifier();
         r.addStep(new TestDistillation(true));
-        HTTPConfig cfg = new HTTPConfig(9080, false);
+        HTTPConfig cfg = new HTTPConfig("Test", 9080, false);
         cfg.setRectifierInstinct(r, new TestDataFactory());
         SCShell shell = new SCShell();
         SmartChannel chnl = shell.addChannel(cfg);
@@ -72,7 +72,7 @@ public class TestHTTPServer
 
         Rectifier rr = new Rectifier();
         rr.addStep(new TestDistillation(false));
-        HTTPConfig ccfg = new HTTPConfig(9080, false);
+        HTTPConfig ccfg = new HTTPConfig("Test", 9080, false);
         ccfg.setClient();
         ccfg.setServer("localhost");
         ccfg.setRectifierInstinct(rr, new TestDataFactory());

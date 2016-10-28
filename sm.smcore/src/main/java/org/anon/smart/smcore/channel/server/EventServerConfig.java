@@ -53,9 +53,9 @@ import static org.anon.utilities.objservices.ConvertService.*;
 
 public class EventServerConfig extends HTTPConfig
 {
-    public EventServerConfig(int port, boolean secure)
+    public EventServerConfig(String nm, int port, boolean secure)
     {
-        super(port, secure);
+        super(nm, port, secure);
         Rectifier rectifier = new Rectifier();
         rectifier.addStep(new TranslationStage(translator.json));
         rectifier.addStep(new SanitizationStage());

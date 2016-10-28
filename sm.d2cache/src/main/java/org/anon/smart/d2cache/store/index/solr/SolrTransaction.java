@@ -64,10 +64,10 @@ public class SolrTransaction extends AbstractStoreTransaction
         super(txnid, conn);
     }
 
-    protected StoreRecord createNewRecord(String group, Object primarykey, Object curr, Object orig)
+    protected StoreRecord createNewRecord(String group, Object primarykey, Object curr, Object orig, boolean isnew)
         throws CtxException
     {
-        return new SolrRecord(group, primarykey, curr, orig);
+        return new SolrRecord(group, primarykey, curr, orig, _connection);
     }
 
     public void commit()
@@ -113,9 +113,14 @@ public class SolrTransaction extends AbstractStoreTransaction
 
 	@Override
 	public StoreRecord addRecord(String group, Object primarykey, Object curr,
-			Object orig, Object relatedKey) throws CtxException {
+			Object orig, Object relatedKey, boolean isnew) throws CtxException {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+    public boolean shouldStore(String storeIn)
+    {
+        return ((storeIn == null) || (storeIn.length() <= 0) || (storeIn.indexOf("index") >= 0));
+    }
 }
 

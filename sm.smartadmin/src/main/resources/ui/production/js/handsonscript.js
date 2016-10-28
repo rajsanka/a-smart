@@ -62,13 +62,15 @@ $(document).ready(function() {
                 formobj.queryMap = {};
                 formobj.queryMap[mapname] = mapvalue;
 
+                /*
                 for (var i in metaData) {
-                    if (metaData[i].attributeType == "java.lang.Integer") {
-                        if (mapname == metaData[i].attributeName) {
-                            formobj.queryMap[mapname] = parseInt(formobj.queryMap[mapname]);
-                        }
-                    }
+                if (metaData[i].attributeType == "java.lang.Integer") {
+                if (mapname == metaData[i].attributeName) {
+                formobj.queryMap[mapname] = parseInt(formobj.queryMap[mapname]);
                 }
+                }
+                }*/
+
                 //smart call
                 smart.search(formobj, function(data) {
                     console.log("search-->" + JSON.stringify(data));
@@ -190,7 +192,6 @@ function getTenantFlows() {
 function clearSteps() {
     $("#lookupform,#addform,#updateform,#searchform,#listallform").empty();
 }
-
 
 //structure createprime and update prime form
 function addandUpdateform(dataobj) {

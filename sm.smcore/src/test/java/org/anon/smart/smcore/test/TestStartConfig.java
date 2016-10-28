@@ -62,7 +62,7 @@ public class TestStartConfig extends BaseStartConfig implements SMCoreConfig
     {
         super(deploy, tenants, enable);
         _channels = new ExternalConfig[1];
-        _channels[0] = new EventServerConfig(port, false);
+        _channels[0] = new EventServerConfig("Test", port, false);
     }
 
     public ExternalConfig[] startChannels()

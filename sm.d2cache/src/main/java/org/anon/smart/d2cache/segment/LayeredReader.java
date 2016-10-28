@@ -52,6 +52,8 @@ import org.anon.smart.d2cache.store.MemoryStore;
 import org.anon.smart.d2cache.store.Store;
 import org.anon.smart.d2cache.store.IndexedStore;
 import org.anon.smart.d2cache.store.StoreItem;
+import org.anon.smart.d2cache.ListParams;
+import org.anon.smart.d2cache.CacheableObject;
 
 import static org.anon.utilities.services.ServiceLocator.*;
 
@@ -72,6 +74,13 @@ public class LayeredReader implements Reader
     	_logger = logger().rlog(this);
     	
 	}
+
+    public void registerMetadata(String group, Class<? extends CacheableObject> datacls)
+        throws CtxException
+    {
+        for (int i = 0; i < _stores.length; i++)
+            _stores[i].getConnection().registerMetadata(group, datacls);
+    }
 
     public void userFilters(DataFilter[] filters)
     {
@@ -99,7 +108,7 @@ public class LayeredReader implements Reader
         return ret;
     }
 
-	private Object lookup(String group, Object key, boolean except) 
+	private Object lookup(String group, Object key, boolean except, Store srchFrom, Object val) 
         throws CtxException 
     {
 		//assumption is that the stores are passed in the order 
@@ -111,7 +120,10 @@ public class LayeredReader implements Reader
         	if((_stores[i] == null) || (_stores[i] instanceof IndexedStore))
         		continue;
         		
-            ret = _stores[i].getConnection().find(group, key);
+            if ((srchFrom != null) && _stores[i].getClass().getName().equals(srchFrom.getClass().getName()) && (val != null))
+                ret = val;
+            else
+                ret = _stores[i].getConnection().find(group, key);
             if ((ret != null) && (!isFilter(ret, except)))
                 ret = null;
 
@@ -142,11 +154,11 @@ public class LayeredReader implements Reader
 	public Object lookup(String group, Object key) 
         throws CtxException 
     {
-        return lookup(group, key, true);
+        return lookup(group, key, true, null, null);
     }
 
 	@Override
-	public List<Object> search(String group, Object query) 
+	public List<Object> search(String group, Object query, long size, long pn, long ps, String sby, boolean asc) 
         throws CtxException 
     {
 		List<Object> ret = new ArrayList<Object>();
@@ -154,25 +166,81 @@ public class LayeredReader implements Reader
 		assertion().assertTrue((query instanceof QueryObject), "query is NOT an instance of QueryObject");
 		List<Object> resultKeys = new ArrayList<Object>();
 		
+        Store srchFrom = null;
+        int order = Integer.MAX_VALUE;
 		for (int i = 0; (i < _stores.length); i++)
         {
-			if(_stores[i] instanceof IndexedStore)
+            int srchorder = _stores[i].searchOrder();
+            if (srchorder < order)
+            {
+                srchFrom = _stores[i];
+                order = srchorder;
+            }
+			/*if(_stores[i] instanceof IndexedStore)
 			{
-				resultKeys.addAll(((IndexedStore)_stores[i]).search(group, query));
-			}
+                resultKeys.addAll(((IndexedStore)_stores[i]).search(group, query, (int)size, (int)pn, (int)ps, sby, asc));
+			}*/
         }
-		for(Object key : resultKeys)
-		{
-            //Lookup takes care of the filter
-			Object obj = this.lookup(group, key, false);
-			if(obj != null)
-				ret.add(obj);
-		}
+
+        List<Store.SearchResult> gotresult = srchFrom.search(group, query, (int)size, (int)pn, (int)ps, sby, asc);
+        if (gotresult == null)
+            return ret;
+
+        //List<Object> keys = gotresult.stream().map(sc -> sc.getKey()).collect(Collectors.toList());
+        //resultKeys.addAll(keys);
+
+        int totsize = 0;
+        System.out.println("Searching for size: " + size + ":" + resultKeys.size());
+        if ((pn >= 0) && (ps > 0))
+            size = ps;
+
+        //traverse in the same order, else sort by is wrong
+        //if (srchFrom.searchHasOnlyKeys())
+        //{
+            for (int i = 0; i < gotresult.size(); i++)
+            {
+                Store.SearchResult result = gotresult.get(i);
+                Object key = result.getKey();
+                if ((size >= 0) && (totsize >= size))
+                    break;
+
+                //Lookup takes care of the filter
+                Object obj = this.lookup(group, key, false, srchFrom, result.getValue());
+
+                if (obj != null)
+                {
+                    ret.add(obj);
+                    totsize++;
+                }
+            }
+        /*
+        }
+        else
+        {
+            //ret.addAll(resultKeys);
+            for (int i = 0; i < resultKeys.size(); i++)
+            {
+                Object data = resultKeys.get(i);
+                if ((size >= 0) && (totsize >= size))
+                    break;
+
+                Object key = readKey(data);
+                //Lookup takes care of the filter
+                Object obj = this.lookup(group, key, false);
+
+                if (obj != null)
+                {
+                    ret.add(obj);
+                    totsize++;
+                }
+            }
+        }
+        */
 		return ret;
 	}
 
 	@Override
-	public List<Object> listAll(String group, int size) 
+	public List<Object> list(ListParams parms)
         throws CtxException 
     {
 		
@@ -182,7 +250,7 @@ public class LayeredReader implements Reader
 		{
 			if(!(_stores[i] instanceof IndexedStore))
 			{
-				keyIter = (_stores[i].getConnection().listAll(group, size));
+				keyIter = _stores[i].getConnection().list(parms);
 				if(keyIter != null)
 				{
 					while(keyIter.hasNext())
@@ -215,5 +283,31 @@ public class LayeredReader implements Reader
         return ret;
     }
 
+    @Override
+    public List<Object> getListings(String group, String sortBy,
+            int listingsPerPage, int pageNum)
+            throws CtxException
+    {
+        List<Object> resultSet = new ArrayList<Object>();
+        Iterator<Object> keyIter = null;
+        for(int i = 0; (i < _stores.length); i++)
+        {
+            //if(!(_stores[i] instanceof MemoryStore) && !(_stores[i] instanceof IndexedStore))
+            if(!(_stores[i] instanceof IndexedStore))
+            {
+                keyIter = (_stores[i].getConnection().getListings(group, sortBy, listingsPerPage, pageNum));
+                if(keyIter != null)
+                {
+                    while(keyIter.hasNext())
+                    {
+                        Object obj = keyIter.next();
+                        if ((obj != null) && (isFilter(obj, false)))
+                            resultSet.add(obj);
+                    }
+                }
+            }
+        }
+        return resultSet;
+    }
 }
 

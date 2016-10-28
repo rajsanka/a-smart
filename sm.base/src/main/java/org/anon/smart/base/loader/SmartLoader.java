@@ -44,6 +44,7 @@ package org.anon.smart.base.loader;
 import java.net.URL;
 
 import org.anon.smart.base.stt.Templatizer;
+import org.anon.smart.d2cache.store.repository.datasource.metadata.SchemaProcessor;
 
 import org.anon.utilities.loader.RelatedLoader;
 import org.anon.utilities.exception.CtxException;
@@ -54,6 +55,12 @@ public class SmartLoader extends RelatedLoader
     {
         addForceLoadSuper("org.anon.smart.base.stt.*");
         addForceLoadSuper("org.anon.smart.base.loader.*");
+        addForceLoadSuper("org.anon.smart.d2cache.store.index.solr.SolrContainerSingleton");
+        addForceLoadSuper("org.anon.smart.base.stt.tl.*");
+        addForceLoadSuper("org.anon.smart.smcore.stt.tl.*");
+        addForceLoadSuper("org.anon.smart.secure.stt.tl.*");
+        addForceLoadSuper("org.anon.smart.monitor.stt.tl.*");
+        addForceLoadSuper("org.anon.smart.secure.sdomain.SmartSecurityManager");
         //addForceLoadSuper("org.anon.smart.base.annot.*");
     }
 
@@ -62,6 +69,7 @@ public class SmartLoader extends RelatedLoader
     {
         super(urls, name, comps);
         addResourceMod(new Templatizer());
+        addPostProcessor(new SchemaProcessor());
     }
 
     public SmartLoader(URL[] urls, String[] comps)

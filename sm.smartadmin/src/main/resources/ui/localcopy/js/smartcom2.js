@@ -381,8 +381,8 @@ function smartConnect() {
     submitData = JSON.stringify(smart.dataSubmit);
     console.log(submitData);
     console.log(url);
-    submitToSmart(url, submitData);
-
+    submitToSmart(url, submitData,tempCallBack);
+    tempCallBack = "";
 }
 
 function checkAllSetFlag() {
@@ -1014,7 +1014,7 @@ function smartlistEnabledFlows(eventUserData) {
 /********************************************** UTILITIES*************************************************/
 
 // submit details
-function submitToSmart(posturl, submitData) {
+function submitToSmart(posturl, submitData,callback) {
 
     $.ajax({
         url : posturl,
@@ -1025,16 +1025,14 @@ function submitToSmart(posturl, submitData) {
         success : function(data) {
             //check if callback function was provided along with the call.Else call the main callback functions
 
-            if (tempCallBack == "" || tempCallBack == undefined) {
+            if (callback == "" || callback == undefined) {
                 if (data['responses'] != undefined)
                     window[smart.submitSuccess](data.responses[0]);
                 else
                     window[smart.submitFailure](data.errors[0]);
             } else {
                 if (data['responses'] != undefined) {
-                    var callback = tempCallBack;
-                    tempCallBack = "";
-                    window[callback] ? window[callback](data.responses[0]) : callback(data.responses[0]);
+                   window[callback] ? window[callback](data.responses[0]) : callback(data.responses[0]);
                 } else {
                     window[smart.submitFailure](data.errors[0]);
                 }

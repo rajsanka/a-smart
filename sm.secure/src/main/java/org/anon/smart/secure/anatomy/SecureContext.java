@@ -46,6 +46,11 @@ import org.anon.smart.base.loader.LoaderVars;
 import org.anon.smart.base.dspace.DSpaceAuthor;
 import org.anon.smart.base.anatomy.SmartModuleContext;
 import org.anon.smart.secure.dspace.SecureSpaceAuthor;
+import org.anon.smart.smcore.anatomy.CoreContext;
+import org.anon.smart.channels.shell.InternalConfig;
+import org.anon.smart.smcore.events.SmartEvent;
+import org.anon.smart.secure.channel.internal.SecureMessageConfig;
+
 
 import static org.anon.utilities.services.ServiceLocator.*;
 import static org.anon.utilities.objservices.ObjectServiceLocator.*;
@@ -54,7 +59,7 @@ import org.anon.utilities.anatomy.ModuleContext;
 import org.anon.utilities.anatomy.JVMEnvironment;
 import org.anon.utilities.exception.CtxException;
 
-public class SecureContext implements SmartModuleContext
+public class SecureContext implements CoreContext
 {
     public SecureContext()
     {
@@ -92,5 +97,18 @@ public class SecureContext implements SmartModuleContext
     {
         return (SecureContext)anatomy().context(SecureContext.class);
     }
+
+    public String[] getEnableFlows()
+    {
+        return new String[] { "Security:all:standard" };
+    }
+
+
+    public InternalConfig getMessageConfig(SmartEvent event)
+        throws CtxException
+    {
+        return new SecureMessageConfig(event);
+    }
+
 }
 

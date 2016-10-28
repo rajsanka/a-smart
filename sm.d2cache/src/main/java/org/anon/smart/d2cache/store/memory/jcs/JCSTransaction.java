@@ -63,7 +63,7 @@ public class JCSTransaction extends AbstractStoreTransaction
         super(txnid, conn);
     }
 
-    protected StoreRecord createNewRecord(String group, Object primarykey, Object curr, Object orig)
+    protected StoreRecord createNewRecord(String group, Object primarykey, Object curr, Object orig, boolean isnew)
         throws CtxException
     {
         JCSConnection conn = (JCSConnection)_connection;
@@ -135,8 +135,13 @@ public class JCSTransaction extends AbstractStoreTransaction
 
 	@Override
 	public StoreRecord addRecord(String group, Object primarykey, Object curr,
-			Object orig, Object relatedKey) throws CtxException {
-		return addRecord(group, primarykey, curr, orig);
+			Object orig, Object relatedKey, boolean isnew) throws CtxException {
+		return addRecord(group, primarykey, curr, orig, isnew);
 	}
+
+    public boolean shouldStore(String storeIn)
+    {
+        return ((storeIn == null) || (storeIn.length() <= 0) || (storeIn.indexOf("memory") >= 0) || (storeIn.indexOf("repository") >= 0));
+    }
 }
 

@@ -42,9 +42,11 @@
 package org.anon.smart.channels;
 
 import java.util.UUID;
+import org.anon.smart.channels.shell.SCConfig;
 
 public interface SmartChannel
 {
     public UUID id();
+    public SCConfig config();
 }
 

@@ -60,6 +60,7 @@ public class FlowDeployment extends Deployment implements FlowConstants
 {
     private transient Map<Class<? extends Annotation>, List<String>> _mapTypes;
 
+    private String fileStore;
     private List<String> _internalData;
     private List<String> primeData;
     private List<String> data;
@@ -71,11 +72,13 @@ public class FlowDeployment extends Deployment implements FlowConstants
     private List<Key> keys;
     private List<Link> links;
     private List<Link> needlinks;
+    private List<String> processedBy;
 
     private Map<String, String> _classToName;
     private Map<String, String> _nameToClass;
     private Map<String, String> _keyMap;
     private Map<String, Link> _needLinks;
+    private Map<String, String> _serviceMashes;
 
     public FlowDeployment()
     {
@@ -83,6 +86,7 @@ public class FlowDeployment extends Deployment implements FlowConstants
         initialize();
         _keyMap = new HashMap<String, String>();
         _needLinks = new HashMap<String, Link>();
+        _serviceMashes = new HashMap<String, String>();
     }
 
     public FlowDeployment(String nm, Artefact[] a)
@@ -97,16 +101,19 @@ public class FlowDeployment extends Deployment implements FlowConstants
         config = new ArrayList<String>();
         keys = new ArrayList<Key>();
         links = new ArrayList<Link>();
+        fileStore = "";
         needlinks = new ArrayList<Link>();
+        processedBy = new ArrayList<String>();
         _internalData = new ArrayList<String>();
         _classToName = new HashMap<String, String>();
         _nameToClass = new HashMap<String, String>();
         _keyMap = new HashMap<String, String>();
         _needLinks = new HashMap<String, Link>();
+        _serviceMashes = new HashMap<String, String>();
         initialize();
     }
 
-    private void copy(List from, List to)
+    protected void copy(List from, List to)
     {
         if ((from != null) && (to != null))
         {
@@ -120,6 +127,8 @@ public class FlowDeployment extends Deployment implements FlowConstants
     {
         super(dep, features);
         initialize();
+        fileStore = dep.fileStore;
+        System.out.println("For deployment: " + deployedName() + ":" + fileStore);
         _classToName = new HashMap<String, String>();
         _nameToClass = new HashMap<String, String>();
         _keyMap = new HashMap<String, String>();
@@ -129,6 +138,8 @@ public class FlowDeployment extends Deployment implements FlowConstants
 
         for (String k : dep._needLinks.keySet())
             _needLinks.put(k, new Link(dep._needLinks.get(k)));
+
+        _serviceMashes = new HashMap<String, String>();
 
         primeData = new ArrayList<String>();
         data = new ArrayList<String>();
@@ -140,6 +151,7 @@ public class FlowDeployment extends Deployment implements FlowConstants
         config = new ArrayList<String>();
         links = new ArrayList<Link>();
         needlinks = new ArrayList<Link>();
+        processedBy = new ArrayList<String>();
 
         copy(dep.primeData, primeData);
         copy(dep.data, data);
@@ -151,6 +163,7 @@ public class FlowDeployment extends Deployment implements FlowConstants
         copy(dep.links, links);
         copy(dep.config, config);
         copy(dep.needlinks, needlinks);
+        copy(dep.processedBy, processedBy);
 
         for (String p : primeData)
         {
@@ -178,6 +191,7 @@ public class FlowDeployment extends Deployment implements FlowConstants
         _nameToClass = new HashMap<String, String>();
         _keyMap = new HashMap<String, String>();
         _needLinks = new HashMap<String, Link>();
+        _serviceMashes = new HashMap<String, String>();
         if (keys != null)
         {
             for (Key k : keys)
@@ -248,7 +262,8 @@ public class FlowDeployment extends Deployment implements FlowConstants
     public List<String> artefacts()
     {
         List<String> ret = new ArrayList<String>();
-        ret.addAll(primeData);
+        if (primeData != null)
+            ret.addAll(primeData);
         if (data != null)
             ret.addAll(data);
 
@@ -273,10 +288,11 @@ public class FlowDeployment extends Deployment implements FlowConstants
     public Object model(ClassLoader ldr) 
         throws CtxException
     { 
-        CrossLinkFlowModel m = new CrossLinkFlowModel(deployedName(), ldr);
+        CrossLinkFlowModel m = new CrossLinkFlowModel(deployedName(), fileStore, ldr);
         return m.link(); 
     }
 
+    public String getFileStore() { return fileStore; }
     public List<String> getPrimeData() { return primeData; }
     public String nameFor(String cls)
     {
@@ -370,6 +386,7 @@ public class FlowDeployment extends Deployment implements FlowConstants
         List<Link> lnks = new ArrayList<Link>();
         for (Link l : links)
         {
+            System.out.println("Checking links: " + l);
             if (l.getFromObject().linkFor(flow, name))
                 lnks.add(l);
         }
@@ -377,19 +394,51 @@ public class FlowDeployment extends Deployment implements FlowConstants
         return lnks;
     }
 
+    private boolean needLinks(String name)
+    {
+        boolean nl = _needLinks.containsKey(name);
+        if (!nl)
+        {
+            for (int i = 0; (!nl) && (needlinks != null) && (i < needlinks.size()); i++)
+            {
+                Link l = needlinks.get(i);
+                nl = (l.getName().equals(name));
+            }
+        }
+
+        return nl;
+    }
+
+    private Link getInternalLink(String name)
+    {
+        for (int i = 0; (needlinks != null) && (i < needlinks.size()); i++)
+        {
+            Link l = needlinks.get(i);
+            return l;
+        }
+
+        return null;
+    }
+
     public void setupLinkFor(String name, String to)
         throws CtxException
     {
-        if (_needLinks.containsKey(name))
+        if (needLinks(name))
         {
             Link lnk = _needLinks.get(name);
-            _needLinks.remove(name);
+            if (lnk == null)
+            {
+                lnk = new Link(getInternalLink(name));
+            }
+            else
+                _needLinks.remove(name);
             lnk.setTo(to, deployedName(), true);
             links.add(lnk); //add it to the links so we can use it.
         }
         else
         {
-            except().te(this, "Cannot add a link for: " + name  + ":" + to + " Does not require a link.");
+            setupServiceMashupFor(name, to);
+            //except().te(this, "Cannot add a link for: " + name  + ":" + to + " Does not require a link.");
         }
     }
 
@@ -407,6 +456,67 @@ public class FlowDeployment extends Deployment implements FlowConstants
             return _needLinks.keySet();
 
         return null;
+    }
+
+    public int getStrictNeedLinks()
+    {
+        if (_needLinks != null)
+        {
+            int cnt = 0;
+            for (Link lnk : _needLinks.values())
+            {
+                if (!lnk.isOptional())
+                    cnt++;
+            }
+
+            return cnt;
+        }
+
+        return 0;
+    }
+
+    public void setupServiceMashupFor(String name, String svc)
+        throws CtxException
+    {
+
+        _serviceMashes.put(name, svc);
+    }
+
+    public String getServiceMash(String name)
+    {
+        return _serviceMashes.get(name);
+    }
+
+    public String[] getLinkedFlows()
+    {
+        List<String> ret = new ArrayList<String>();
+        System.out.println("Got Links: " + links + ":" + deployedName());
+        for (int i = 0; (links != null) && (i < links.size()); i++)
+        {
+            Link lnk = links.get(i);
+            String fflow = null;
+            if (lnk.getFromObject() != null)
+                fflow = lnk.getFromObject().getFlow();
+            
+            String tflow = null;
+            if (lnk.getToObject() != null)
+                tflow = lnk.getToObject().getFlow();
+
+            if ((fflow != null) && (!fflow.equals(deployedName())))
+                ret.add(fflow);
+
+            if ((tflow != null) && (!tflow.equals(deployedName())))
+                ret.add(tflow);
+
+            System.out.println("Link is: " + lnk.getName() + ":" + fflow + ":" + tflow + ":" + deployedName());
+        }
+
+        return ret.toArray(new String[0]);
+    }
+
+    public List<String> getProcessedBy()
+    {
+        return processedBy;
     }
 }
 

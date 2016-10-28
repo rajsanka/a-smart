@@ -46,16 +46,22 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.anon.smart.base.dspace.DSpaceObject;
+import org.anon.smart.base.annot.KeyAnnotate;
+import org.anon.smart.base.annot.PrimeDataAnnotate;
 
 import org.anon.utilities.exception.CtxException;
 
+@PrimeDataAnnotate(name="LinkedData", store="repository")
 public class LinkedData implements DSpaceObject, java.io.Serializable
 {
+    @KeyAnnotate(keys="_linkKey")
     private Object _linkKey;
     private List<UUID> _links;
 
     private String _linkType;
     private String _linkedType;
+
+    private transient boolean isNew;
 
     public LinkedData(String l, String lo, Object key)
     {
@@ -63,6 +69,7 @@ public class LinkedData implements DSpaceObject, java.io.Serializable
         _linkedType = lo;
         _linkKey = key;
         _links = new ArrayList<UUID>();
+        isNew = true;
     }
 
     public void addLink(UUID link)
@@ -94,16 +101,28 @@ public class LinkedData implements DSpaceObject, java.io.Serializable
         return _linkType + "__" + _linkedType;
     }
 
+    /*
     public String toString()
     {
         return "LinkType: " + _linkType + ":" + _linkedType + ":" + _linkKey + ":" + _links;
     }
+    */
 
 	public void smart___initOnLoad() 
         throws CtxException 
     {
         //if (_links == null)
          //   _links = new ArrayList<UUID>();
+    }
+
+    public boolean smart___isNew()
+    {
+        return isNew;
+    }
+
+    public void smart___setIsNew(boolean n)
+    {
+        isNew = n;
     }
 }
 

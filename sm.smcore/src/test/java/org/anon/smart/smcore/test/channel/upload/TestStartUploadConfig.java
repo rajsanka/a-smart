@@ -17,8 +17,8 @@ public class TestStartUploadConfig extends BaseStartConfig implements SMCoreConf
     {
         super(deploy, tenants, enable);
         _channels = new ExternalConfig[2];
-        _channels[0] = new EventServerConfig(port, false);
-        _channels[1] = new UploadServerConfig(uploadPort, false);
+        _channels[0] = new EventServerConfig("Test", port, false);
+        _channels[1] = new UploadServerConfig("Test", uploadPort, false);
     }
 
     public ExternalConfig[] startChannels()

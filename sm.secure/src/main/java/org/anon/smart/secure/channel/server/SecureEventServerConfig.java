@@ -51,20 +51,21 @@ import org.anon.smart.smcore.channel.server.EventErrorHandler;
 import org.anon.smart.smcore.channel.server.EventDataFactory;
 
 import org.anon.smart.secure.channel.distill.sanitization.SecureSanitizationStage;
+import org.anon.smart.secure.channel.distill.storage.SecureStorageStage;
 
 import static org.anon.utilities.objservices.ConvertService.*;
 
 
 public class SecureEventServerConfig extends HTTPConfig
 {
-    public SecureEventServerConfig(int port, boolean secure)
+    public SecureEventServerConfig(String nm, int port, boolean secure)
     {
-        super(port, secure);
+        super(nm, port, secure);
         Rectifier rectifier = new Rectifier();
         rectifier.addStep(new TranslationStage(translator.json));
         rectifier.addStep(new SecureSanitizationStage()); //note this is the sanitization stage from secure package
         rectifier.addStep(new AlterationStage());
-        rectifier.addStep(new StorageStage());
+        rectifier.addStep(new SecureStorageStage());
         rectifier.setupErrorHandler(new EventErrorHandler());
         setRectifierInstinct(rectifier, new EventDataFactory());
     }

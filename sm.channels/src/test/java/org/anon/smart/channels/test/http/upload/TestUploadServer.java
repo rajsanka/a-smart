@@ -30,7 +30,7 @@ public class TestUploadServer {
 
 	@Test
 	public void startServer() throws Exception {
-		HTTPConfig cfg = new HTTPUploadConfig(9020, false);
+		HTTPConfig cfg = new HTTPUploadConfig("Test", 9020, false);
 		SCShell shell = new SCShell();
 		SmartChannel chnl = shell.addChannel(cfg);
 		shell.startAllChannels();

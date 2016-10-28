@@ -41,11 +41,13 @@
 
 package org.anon.smart.smcore.data.datalinks;
 
+import java.util.Map;
 import java.util.List;
 import java.util.UUID;
 import java.util.ArrayList;
 import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.anon.smart.atomicity.EmpiricalData;
 import org.anon.smart.base.flow.CrossLinkLink;
@@ -69,6 +71,7 @@ public class DataLinker
     CrossLinkSmartTenant _tenant;
     CrossLinkDeploymentShell _dshell;
     RuntimeShell _rshell;
+    Map _createdLinks;
 
     public DataLinker()
         throws CtxException
@@ -76,6 +79,7 @@ public class DataLinker
         _tenant = CrossLinkSmartTenant.currentTenant();
         _dshell = _tenant.deploymentShell();
         _rshell = (RuntimeShell)_tenant.runtimeShell();
+        _createdLinks = new ConcurrentHashMap();
     }
 
     private Class getRelationClass(Class cls, Type type)
@@ -127,7 +131,7 @@ public class DataLinker
             flow = fflow;
         }
 
-        System.out.println("Got for: " + pcls + ":" + lnks + ":" + flow + ":" + tflow + ":" + fflow);
+        System.out.println("Got for: " + pcls + ":" + lnks + ":" + flow + ":" + tflow + ":" + fflow + ":" + fname + ":" + tname);
 
         for (int i = 0; (lnks != null) && (i < lnks.size()); i++)
         {
@@ -140,8 +144,10 @@ public class DataLinker
             String attr = null;
             if (fobj.getFlow().equals(fflow) && fobj.getObject().equals(fname))
                 attr = fobj.getField();
-            else if (tobj.getFlow().equals(fflow) && fobj.getObject().equals(tname))
+            //else if (tobj.getFlow().equals(fflow) && fobj.getObject().equals(tname))
+            else if (tobj.getFlow().equals(fflow) && (tobj.getObject().equals(fname)) && fobj.getFlow().equals(tflow) && fobj.getObject().equals(tname))
                 attr = tobj.getField();
+        System.out.println("Got for: " + pcls + ":" + fobj.getFlow() + ":" + tobj.getFlow() + ":" + tflow + ":" + fflow + ":" + fname + ":" + tname + ":" + attr);
             if (attr != null)
             {
                 Object key = reflect().getAnyFieldValue(data.getClass(), data, attr);
@@ -182,19 +188,38 @@ public class DataLinker
         throws CtxException
     {
         String group = from + "__" + to;
-        LinkedData ldata = (LinkedData)_rshell.lookupFor(fromflow, group, key);
+        String linkkey = fromflow + "__" + group + "__" + key;
+        _rshell.registerFor(fromflow, group, LinkedData.class);
+        LinkedData ldata = (LinkedData)_createdLinks.get(linkkey);
+        if (ldata == null)
+        {
+            ldata = (LinkedData)_rshell.lookupFor(fromflow, group, key);
+            if (ldata != null) ldata.smart___setIsNew(false);
+        }
         return ldata;
     }
 
+    private void storeLinkBetween(String fromflow, String from, String to, Object key, LinkedData ldata)
+    {
+        if (ldata != null)
+        {
+            String group = from + "__" + to;
+            String linkkey = fromflow + "__" + group + "__" + key;
+            _createdLinks.put(linkkey, ldata);
+        }
+    }
 
     private void createLinks(TransitionContext ctx, List<CrossLinkLink> links, Class dcls, SmartData truthData, SmartData modified)
         throws CtxException
     {
         //TODO: need to lock LinkedData before modifying
+        boolean found = false;
+        boolean shouldlink = false;
         for (CrossLinkLink l : links)
         {
             CrossLinkLink.CrossLinkLinkObject fobj = l.getFromObject();
             CrossLinkLink.CrossLinkLinkObject tobj = l.getToObject();
+            CrossLinkLink.CrossLinkLinkObject viaflow = l.getViaFlowObject();
             String toflow = tobj.getFlow();
             String toobj = tobj.getObject();
             String fflow = fobj.getFlow();
@@ -203,6 +228,8 @@ public class DataLinker
             Object key = reflect().getAnyFieldValue(dcls, truthData, attr);
             Object modkey = reflect().getAnyFieldValue(dcls, modified, attr);
             UUID addrelated = truthData.smart___id();
+
+            System.out.println("Checking for crosslink for: " + toflow + ":" + toobj + ":" + fflow + ":" + fobject + ":" + attr + ":" + viaflow);
 
             if (l.isInternal())
             {
@@ -213,11 +240,24 @@ public class DataLinker
                 if ((via != null) && (evtname != null) && (via.getObject().equals(evtname)))
                 {
                     String eattr = via.getField();
+                    String filterflow = null;
+                    if (viaflow != null)
+                        filterflow = (String)reflect().getAnyFieldValue(evt.getClass(), evt, viaflow.getField());
                     Object setkey = reflect().getAnyFieldValue(evt.getClass(), evt, eattr);
                     if (setkey != null)
                     {
-                        modkey = setkey;
-                        reflect().setAnyFieldValue(dcls, modified, attr, setkey);
+                        //check it is present.
+                        String tflow = tobj.getFlow();
+                        SmartData d = (SmartData)_rshell.lookupFor(tflow, toobj, setkey);
+                        shouldlink = true;
+                        //can be more than one 
+                        //assertion().assertNotNull(d, "Cannot link to a invalid key for: " + tflow + ":" + toobj + ":" + setkey + " does not exist. ");
+                        if ((d != null) && ((filterflow == null) || (filterflow.equals(tflow))))
+                        {
+                            modkey = setkey;
+                            reflect().setAnyFieldValue(dcls, modified, attr, setkey);
+                            found = true;
+                        }
                     }
                 }
             }
@@ -237,8 +277,13 @@ public class DataLinker
                         pldata.removeLink(addrelated);
                     ctx.transaction().addToTransaction(pldata, fflow);
                 }
+                //store so that it can be used again
+                storeLinkBetween(fflow, fobject, toobj, modkey, ldata);
             }
         }
+
+        if (shouldlink)
+            assertion().assertTrue(found, "Cannot link. Cannot find any valid links.");
     }
 
     public void createLinks(TransitionContext ctx, SmartDataED edata, SmartData truthData, boolean isNew)
@@ -256,8 +301,14 @@ public class DataLinker
         if (linked.size() <= 0)
             return;
 
+        List<String> alreadylinked = new ArrayList<String>();
         for (CrossLinkFlowDeployment clf : linked)
         {
+            String lflow = clf.deployedName();
+            if (alreadylinked.contains(lflow))
+                continue;
+
+            alreadylinked.add(lflow);
             List<CrossLinkLink> links = clf.toLinksFor(flow, name);
             if ((links == null) || (links.size() <= 0))
                 continue;

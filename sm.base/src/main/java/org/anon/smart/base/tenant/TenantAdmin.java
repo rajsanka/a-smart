@@ -68,7 +68,16 @@ public class TenantAdmin implements RelatedObject, java.io.Serializable
     {
         //need to add validations for things like only smart objects,
         //only smart models etc.
-        _defaultTenantObjects.put(model, objs);
+        if (!_defaultTenantObjects.containsKey(model))
+        {
+            _defaultTenantObjects.put(model, objs);
+        }
+        else
+        {
+            List<Object> exist = _defaultTenantObjects.get(model);
+            exist.addAll(objs);
+            _defaultTenantObjects.put(model, exist);
+        }
     }
 
     public String tenantName()
@@ -108,17 +117,30 @@ public class TenantAdmin implements RelatedObject, java.io.Serializable
         if (_newTenant == null)
             tenant = (SmartTenant)CrossLinkSmartTenant.currentTenant().link();
         TenantsHosted.commitTenant(tenant);
-        
-        for (String model : _defaultTenantObjects.keySet())
+        if(_defaultTenantObjects != null)
         {
-            List<Object> commitObjs = (List<Object>)_defaultTenantObjects.get(model);
-            Object[] objs = commitObjs.toArray();
-            if ((objs.length > 0) && (_newTenant != null))
+            for (String model : _defaultTenantObjects.keySet())
             {
-                CrossLinkRuntimeShell shell = _newTenant.rshell();
-                shell.commitInternalObjects(model, objs);
+                List<Object> commitObjs = (List<Object>)_defaultTenantObjects.get(model);
+                Object[] objs = commitObjs.toArray();
+                if ((objs.length > 0) && (_newTenant != null))
+                {
+                    CrossLinkRuntimeShell shell = _newTenant.rshell();
+                    shell.commitInternalObjects(model, objs);
+                }
             }
+            //can remove it as soon as committed, since it is available in cache henceforth
+            cleanup();
         }
+    }
+
+    public void cleanup()
+    {
+        if (_defaultTenantObjects != null)
+            _defaultTenantObjects.clear();
+
+        _defaultTenantObjects = null;
+        _newTenant = null;
     }
 }
 

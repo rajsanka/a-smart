@@ -65,5 +65,6 @@ public class ShellContext
     public String name() { return _name; }
 
     public CrossLinkSmartTenant tenant() { return _tenant; }
+    public void cleanup() { _tenant = null; }
 }
 

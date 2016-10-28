@@ -44,6 +44,7 @@ package org.anon.smart.base.tenant.shell;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.anon.utilities.services.ServiceLocator.*;
@@ -102,24 +103,37 @@ public class DeploymentShell implements SmartShell, FlowConstants
         }
     }
 
-    public FlowDeployment enableForMe(String name, String[] features, Map<String, String> linked)
+    public FlowDeployment enableForMe(String name, String[] features, Map<String, List<String>> linked)
+        throws CtxException
+    {
+        return enableForMe(name, features, linked, false, true);
+    }
+
+    public FlowDeployment enableForMe(String name, String[] features, Map<String, List<String>> linked, boolean std, boolean lookup)
         throws CtxException
     {
         //this has to be run from the same classloader as the tenant which will be
         //the application class loader. Anything else should anyways give error.
-        Artefact[] artefacts = FlowDeploymentSuite.getAssistant().enableFor(_licensed, name, features);
+        Artefact[] artefacts = FlowDeploymentSuite.getAssistant().enableFor(_licensed, name, features, linked);
         //for (int i = 0; i < artefacts.length; i++)
          //   System.out.println("Added artefact for " + name + ": " + artefacts[i].getName() + ":" + artefacts[i].getClazz());
         FlowDeployment deploy = _licensed.assistant().deploymentFor(name);
         //if there are links needed, then ensure they are there.
-        if (deploy.getNeedLinks() > 0)
+        System.out.println("The number of links in " + name + ":" + deploy.getStrictNeedLinks());
+        if (linked.size() > 0)
         {
-            assertion().assertTrue(((linked != null) && (linked.size() >= deploy.getNeedLinks())), "The deployment cannot be enabled without links provided");
+            assertion().assertTrue(((linked != null) && (linked.size() >= deploy.getStrictNeedLinks())), "The deployment cannot be enabled without links provided");
             for (String n : linked.keySet())
-                deploy.setupLinkFor(n, linked.get(n));
+            {
+                List<String> lnks = linked.get(n);
+                for (int j = 0; (lnks != null) && (j < lnks.size()); j++)
+                {
+                    deploy.setupLinkFor(n, lnks.get(j));
+                }
+            }
         }
 
-        assertion().assertTrue((deploy.getNeedLinks() <= 0), "Not all links are provided. Need links for: " + deploy.getNeedLinkNames());
+        assertion().assertTrue((deploy.getStrictNeedLinks() <= 0), "Not all links are provided. Need links for: " + deploy.getNeedLinkNames());
         List<String> jars = deploy.myJars();
         for (String jar : jars)
         {
@@ -127,9 +141,31 @@ public class DeploymentShell implements SmartShell, FlowConstants
             ((SmartLoader)_loader).addJar(jar);
         }
         Object model = deploy.model(_loader);
-        _tenant.enableFlow(model, artefacts, deploy);
-        _tenant.registerEnabledFlow(name, features);
+        _tenant.enableFlow(model, artefacts, deploy, lookup);
+        _tenant.registerEnabledFlow(name, features, linked, std);
         cacheLinks(deploy);
+        return deploy;
+    }
+
+    public FlowDeployment addLinksFor(String name, Map<String, List<String>> linked)
+        throws CtxException
+    {
+        FlowDeployment deploy = _licensed.assistant().deploymentFor(name);
+        //if there are links needed, then ensure they are there.
+        if (deploy.getNeedLinks() > 0)
+        {
+            assertion().assertTrue(((linked != null) && (linked.size() >= deploy.getNeedLinks())), "The deployment cannot be enabled without links provided");
+            for (String n : linked.keySet())
+            {
+                List<String> lnks = linked.get(n);
+                for (int j = 0; (lnks != null) && (j < lnks.size()); j++)
+                {
+                    deploy.setupLinkFor(n, lnks.get(j));
+                }
+            }
+        }
+
+        _tenant.registerLinks(name, linked);
         return deploy;
     }
 
@@ -168,6 +204,12 @@ public class DeploymentShell implements SmartShell, FlowConstants
         return deployment(dep, name, CONFIG);
     }
 
+    public String[] linksFor(String dep, Class cls, String key)
+        throws CtxException
+    {
+        return _licensed.assistant().linkFor(dep, cls, key);
+    }
+
     public List<Class> transitionsFor(String dep, String prime, String event, String extra)
         throws CtxException
     {
@@ -184,7 +226,49 @@ public class DeploymentShell implements SmartShell, FlowConstants
             cls.addAll(extrats);
         }
 
+        //add from the processedBy also
+        FlowDeployment deploy = deploymentFor(dep);
+        List<String> processedBy = deploy.getProcessedBy();
+        for (int i = 0; (processedBy != null) && (i < processedBy.size()); i++)
+        {
+            FlowDeployment d = deploymentFor(processedBy.get(i));
+            if (d != null)
+            {
+                List<Class> dcls = transitionsFor(processedBy.get(i), prime, event, extra);
+                if (dcls != null)
+                    cls.addAll(dcls);
+            }
+        }
+
         return cls;
+    }
+
+    public Object[] getServiceFor(String service)
+        throws CtxException
+    {
+        String[] parts = service.split("\\.");
+        assertion().assertNotNull(parts, "Cannot find service for: " + service);
+        assertion().assertTrue((parts.length == 3), "The format for service has to be in the form flow.transitioname.servicemethod " + service);
+        String dep = parts[0]; String data = parts[1];
+        ArtefactType atype = ArtefactType.artefactTypeFor(TRANSITION);
+        String srch = atype.createKey(data, ".*", ".*");
+        List<Class> lcls = _licensed.assistant().clazzezFor(dep, srch, atype, _loader);
+        assertion().assertNotNull(lcls, "Cannot find the transition for " + service);
+        assertion().assertTrue((lcls.size() > 0), "Cannot find the transition for " + service);
+        Class cls = lcls.get(0);
+        Method[] mthd = reflect().getAnnotatedMethods(cls, "org.anon.smart.smcore.annot.MethodAnnotate");
+        System.out.println("Got class: " + cls + ":" + mthd.length);
+        for (int i = 0; i < mthd.length; i++)
+        {
+            if (mthd[i].getName().equals(parts[2]))
+            {
+                Object[] ret = new Object[] { cls, mthd[i] };
+                return ret;
+            }
+        }
+
+        assertion().assertTrue(false, "Cannot find the service: " + service);
+        return null;
     }
 
     public Class primeClass(String dep, String name)
@@ -239,6 +323,8 @@ public class DeploymentShell implements SmartShell, FlowConstants
     public void cleanup()
         throws CtxException
     {
+        _tenant = null;
+        _loader = null;
     }
 }
 

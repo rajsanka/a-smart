@@ -46,6 +46,7 @@ import org.anon.smart.d2cache.store.fileStore.disk.DiskFSConfig;
 import org.anon.smart.d2cache.store.fileStore.hadoop.HadoopFSConfig;
 import org.anon.smart.d2cache.store.index.solr.BasicSolrConfig;
 import org.anon.smart.d2cache.store.repository.hbase.TestHBaseConfig;
+import org.anon.smart.d2cache.store.repository.mysql.BasicSQLConfig;
 
 public class BasicD2CacheConfig implements D2CacheConfig {
 
@@ -54,19 +55,32 @@ public class BasicD2CacheConfig implements D2CacheConfig {
 	private StoreConfig _storeConfig;
 	private StoreConfig _diskConfig;
 	private StoreConfig _hadoopConfig;
+    private StoreConfig _mysqlConfig;
+    private boolean _useRDB;
 
-	public BasicD2CacheConfig() {
-
+	public BasicD2CacheConfig(boolean usedb) {
+        _useRDB = usedb;
 	}
 
-	public BasicD2CacheConfig(String solrHome, String zookeeper,
-			String zookeeperPort, String hbaseHost, boolean isLocal) {
+	public BasicD2CacheConfig(String solrHome, String zookeeper, String zookeeperPort, String hbaseHost, boolean isLocal) 
+    {
 		_solrConfig = new BasicSolrConfig(solrHome);
 		_storeConfig = new TestHBaseConfig(zookeeper, zookeeperPort, hbaseHost,
 				isLocal);
 		createHadoopStoreConfig();
 		createDiskStoreConfig();
+        createMySQLConfig();
+        _useRDB = false;
 	}
+
+    public BasicD2CacheConfig(String solrHome, String svr, int port, String user, String pwd, String db)
+    {
+		_solrConfig = new BasicSolrConfig(solrHome);
+        _mysqlConfig = new BasicSQLConfig("default", svr, port, user, pwd, db);
+        _useRDB = true;
+        createHadoopStoreConfig();
+        createDiskStoreConfig();
+    }
 
 	public void createIndexConfig(String solrHome) {
 		_solrConfig = new BasicSolrConfig(solrHome);
@@ -92,8 +106,10 @@ public class BasicD2CacheConfig implements D2CacheConfig {
 
 	@Override
 	public StoreConfig getStoreConfig() {
-		// TODO Auto-generated method stub
-		return _storeConfig;
+        if (_useRDB)
+            return _mysqlConfig;
+        else
+            return _storeConfig;
 	}
 
 	@Override
@@ -114,6 +130,11 @@ public class BasicD2CacheConfig implements D2CacheConfig {
 		return _hadoopConfig;
 	}
 
+    @Override
+    public StoreConfig getMySQLConfig() {
+        return _mysqlConfig;
+    }
+
 	@Override
 	public void createHadoopStoreConfig() {
 		_hadoopConfig = new HadoopFSConfig("hdfs://hadoop:9000",
@@ -126,5 +147,15 @@ public class BasicD2CacheConfig implements D2CacheConfig {
 		_diskConfig = new DiskFSConfig();
 
 	}
+
+    @Override
+    public void createMySQLConfig() {
+        _mysqlConfig = new BasicSQLConfig("default", "localhost", 3306, "smarttest", "smarttest", "smarttest");
+    }
+
+    public boolean useRDB() {
+        //TODO: 
+        return _useRDB;
+    }
 
 }

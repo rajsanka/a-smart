@@ -53,5 +53,10 @@ public interface DSpaceObject extends CacheableObject
 
     public String smart___objectGroup()
         throws CtxException;
+
+    public boolean smart___isNew()
+        throws CtxException;
+
+    public void smart___setIsNew(boolean n);
 }
 

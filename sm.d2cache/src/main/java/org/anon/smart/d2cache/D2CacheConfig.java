@@ -49,10 +49,13 @@ public interface D2CacheConfig {
 	public void createStoreConfig(String zookeeper, String zookeeperPort, String hbaseHost, boolean isLocal);
 	public void createHadoopStoreConfig();
 	public void createDiskStoreConfig();
+    public void createMySQLConfig();
 	
+    public boolean useRDB();
 	public StoreConfig getMemoryConfig();
 	public StoreConfig getIndexConfig();
 	public StoreConfig getStoreConfig();
 	public StoreConfig getDiskStoreConfig();
 	public StoreConfig getHadoopStoreConfig();
+    public StoreConfig getMySQLConfig();
 }

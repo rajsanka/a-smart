@@ -134,6 +134,10 @@ public class TestConfig implements D2CacheConfig {
 		return new DiskFSConfig();
 	}
 
+    public StoreConfig getMySQLConfig() {
+        return null;
+    }
+
 	@Override
 	public StoreConfig getHadoopStoreConfig() {
 		// TODO Auto-generated method stub
@@ -151,5 +155,12 @@ public class TestConfig implements D2CacheConfig {
 		// TODO Auto-generated method stub
 
 	}
+
+    public void createMySQLConfig() {
+    }
+
+    public boolean useRDB() {
+        return false;
+    }
 
 }

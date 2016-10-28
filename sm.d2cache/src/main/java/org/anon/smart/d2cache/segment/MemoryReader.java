@@ -48,6 +48,8 @@ import java.util.List;
 import org.anon.smart.d2cache.Reader;
 import org.anon.smart.d2cache.DataFilter;
 import org.anon.smart.d2cache.store.Store;
+import org.anon.smart.d2cache.ListParams;
+import org.anon.smart.d2cache.CacheableObject;
 import org.anon.utilities.exception.CtxException;
 import org.anon.utilities.logger.Logger;
 
@@ -63,6 +65,13 @@ public class MemoryReader implements Reader {
 		System.out.println("USING MEM ONLY READER");
     	_stores = stores;
     	_logger = logger().rlog(this);
+    }
+
+    public void registerMetadata(String group, Class<? extends CacheableObject> datacls)
+        throws CtxException
+    {
+        for (int i = 0; i < _stores.length; i++)
+            _stores[i].getConnection().registerMetadata(group, datacls);
     }
 
     public void userFilters(DataFilter[] filters)
@@ -92,7 +101,7 @@ public class MemoryReader implements Reader {
 	}
 
 	@Override
-	public List<Object> search(String group, Object query) 
+	public List<Object> search(String group, Object query, long size, long pn, long ps, String sby, boolean asc) 
 	    throws CtxException 
 	{
 		// TODO Auto-generated method stub
@@ -100,7 +109,7 @@ public class MemoryReader implements Reader {
 	}
 
 	@Override
-	public List<Object> listAll(String group, int size) 
+	public List<Object> list(ListParams parms)
 	    throws CtxException 
 	{
 		// TODO Auto-generated method stub
@@ -115,6 +124,14 @@ public class MemoryReader implements Reader {
         ret = _stores[0].getConnection().exists(group, key);
         
         return ret;
+    }
+
+    @Override
+    public List<Object> getListings(String group, String sortBy,
+            int listingsPerPage, int pageNum)
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

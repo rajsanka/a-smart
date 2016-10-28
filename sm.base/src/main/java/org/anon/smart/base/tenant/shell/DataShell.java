@@ -57,6 +57,7 @@ import org.anon.smart.base.dspace.SpaceFilter;
 import org.anon.smart.base.monitor.MonitorableObject;
 import org.anon.smart.base.tenant.TenantConstants;
 import org.anon.smart.d2cache.BrowsableReader;
+import org.anon.smart.d2cache.ListParams;
 
 import org.anon.utilities.exception.CtxException;
 
@@ -136,7 +137,7 @@ public class DataShell implements SmartShell, TenantConstants
         throws CtxException
     {
         String sname = spaceNameFor(model.name());
-        DSpace space = spaceFor(sname, model.browsable());
+        DSpace space = spaceFor(sname, model.browsable(), model.getFileStore());
         _spaces.put(model.name(), space);
         _indexedSpaces.add(model.name());
         int aper = _indexedSpaces.size() + _startAperture;
@@ -168,6 +169,19 @@ public class DataShell implements SmartShell, TenantConstants
         }
         for (DSpace s : _spaces.values())
             s.cleanup();
+
+        if (_context != null)
+            _context.cleanup();
+
+        _context = null;
+    }
+
+    public void registerIn(String spacemodel, String group, Class<? extends DSpaceObject> datacls)
+        throws CtxException
+    {
+        DSpace space = getSpaceFor(spacemodel, SpaceFilter.spaceaction.read, true);
+        assertion().assertNotNull(space, "Space is NULL for:"+spacemodel);
+        registerInSpace(space, group, datacls);
     }
 
     public Object lookup(String spacemodel, String group, Object key)
@@ -182,39 +196,46 @@ public class DataShell implements SmartShell, TenantConstants
     
     public boolean exists(String spacemodel, String group, Object key)
             throws CtxException
-        {
-            //DSpace space = _spaces.get(spacemodel);
-            DSpace space = getSpaceFor(spacemodel, SpaceFilter.spaceaction.read, true);
-            assertion().assertNotNull(space, "Space is NULL for:"+spacemodel);
-            boolean res = existsObject(space, key, group, false);
-            return res;
-        }
+    {
+        //DSpace space = _spaces.get(spacemodel);
+        DSpace space = getSpaceFor(spacemodel, SpaceFilter.spaceaction.read, true);
+        assertion().assertNotNull(space, "Space is NULL for:"+spacemodel);
+        boolean res = existsObject(space, key, group, false);
+        return res;
+    }
 
-    public List<Object> search(String spacemodel, Class clz, Map<String, String> query)
+    public List<Object> search(String spacemodel, Class clz, Map<String, String> query, long size, long pageNum, long pageSize, String sortBy, boolean asc)
         throws CtxException
     {
         //DSpace space = _spaces.get(spacemodel);
         DSpace space = getSpaceFor(spacemodel, SpaceFilter.spaceaction.read, true);
-        List<Object> ret = searchIn(space, query, clz);
+        List<Object> ret = searchIn(space, query, size, clz, pageNum, pageSize, sortBy, asc);
         return ret;
     }
 
-    public List<Object> listAll(String spacemodel, String group, int size)
+    public List<Object> listAll(String spacemodel, ListParams parms)
     	throws CtxException
     {
     	//DSpace space = _spaces.get(spacemodel);
         DSpace space = getSpaceFor(spacemodel, SpaceFilter.spaceaction.read, true);
     	assertion().assertNotNull(space, "ListAll:Space is NULL for:"+spacemodel);
-        List<Object> ret = listAllIn(space, group, size);
+        List<Object> ret = listAllIn(space, parms);
         return ret;
     }
+
     void commitTo(String spacemodel, DSpaceObject[] sobjs)
+        throws CtxException
+    {
+        commitTo(spacemodel, sobjs, null);
+    }
+
+    void commitTo(String spacemodel, DSpaceObject[] sobjs, DSpaceObject[] origs)
         throws CtxException
     {
         //TransactDSpace space = (TransactDSpace)_spaces.get(spacemodel);
         TransactDSpace space = (TransactDSpace)getSpaceFor(spacemodel, SpaceFilter.spaceaction.read, true);
         assertion().assertNotNull(space, "Cannot find transact space for: " + spacemodel);
-        addToSpace(space, sobjs);
+        addToSpace(space, sobjs, origs);
     }
 
     private DSpace getSpaceFor(String spacemodel, SpaceFilter.spaceaction action, boolean except)
@@ -234,6 +255,16 @@ public class DataShell implements SmartShell, TenantConstants
         throws CtxException
     {
         return (TransactDSpace)getSpaceFor(spacemodel, SpaceFilter.spaceaction.write, false);
+    }
+
+    public List getListings(String spacemodel, String group, String sortBy,
+            int listingsPerPage, int pageNum)
+            throws CtxException
+    {
+        DSpace space = getSpaceFor(spacemodel, SpaceFilter.spaceaction.read, true);
+        assertion().assertNotNull(space, "getListings:Space is NULL for:"+spacemodel);
+        List<Object> ret = getListingsFor(space, group, sortBy, listingsPerPage, pageNum);
+        return ret;
     }
 }
 

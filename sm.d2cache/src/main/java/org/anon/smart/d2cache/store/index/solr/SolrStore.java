@@ -100,8 +100,18 @@ public class SolrStore extends AbstractStore implements IndexedStore {
 	}
 
 	@Override
-	public List<Object> search(String group, Object query) throws CtxException {
-		return getConnection().search(group, query);
+	public List<Store.SearchResult> search(String group, Object query, int size, int pn, int ps, String sby, boolean asc) throws CtxException {
+		return getConnection().search(group, query, size, pn, ps, sby, asc);
 	}
+
+    public int searchOrder()
+    {
+        return 1;
+    }
+
+    public boolean searchHasOnlyKeys()
+    {
+        return true;
+    }
 
 }

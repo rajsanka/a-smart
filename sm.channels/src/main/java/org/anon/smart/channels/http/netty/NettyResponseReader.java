@@ -63,6 +63,7 @@ import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 
 import org.anon.smart.channels.data.PData;
+import org.anon.smart.channels.Route;
 import org.anon.smart.channels.http.HTTPRequestPData;
 import org.anon.smart.channels.http.HTTPMessageReader;
 
@@ -73,15 +74,33 @@ import org.anon.utilities.exception.CtxException;
 public class NettyResponseReader implements HTTPMessageReader
 {
     private String _uri;
+    private boolean _get;
+    private String _host;
 
     public NettyResponseReader(String uri)
     {
         _uri = uri;
+        _get = false;
+    }
+
+    public void setGet()
+    {
+        _get = true;
+    }
+
+    public void resetGet()
+    {
+        _get = false;
     }
 
     public void setURI(String uri)
     {
         _uri = uri;
+    }
+
+    public void setHost(String h)
+    {
+        _host = h;
     }
 
     public String getURI(Object msg)
@@ -112,33 +131,47 @@ public class NettyResponseReader implements HTTPMessageReader
         return stream;
     }
 
-    public Object transmitObject(PData[] req)
+    public Object transmitObject(PData[] req,Route r)
         throws CtxException
     {
         HttpRequest request = new DefaultHttpRequest(HTTP_1_1, POST, _uri);
-        String contentType = "application/json";
-        Map<String, String> headers = new HashMap<String, String>();
-        for (int i = 0; i < req.length; i++)
+        if (_get)
         {
-            StringBuffer buff = io().readStream(req[i].cdata().data());
-            request.setContent(ChannelBuffers.copiedBuffer(buff.toString(), CharsetUtil.UTF_8));
-            if (req[i] instanceof HTTPRequestPData)
-            {
-                HTTPRequestPData hpdata = (HTTPRequestPData)req[i];
-                if ((hpdata.getContentType() != null) && (hpdata.getContentType().length() > 0))
-                    contentType = hpdata.getContentType();
-
-                Map<String, String> hdrs = hpdata.getHeaders();
-                for (String name : hdrs.keySet())
-                    headers.put(name, hdrs.get(name));
-            }
+            request = new DefaultHttpRequest(HTTP_1_1, GET, _uri);
+            request.setHeader(HttpHeaders.Names.USER_AGENT, "smart");
+            request.setHeader(HttpHeaders.Names.HOST, _host);
+            //request.setHeader(HttpHeaders.Names.CONNECTION, HttpHeaders.Values.CLOSE);
+            request.setHeader(HttpHeaders.Names.ACCEPT_ENCODING, HttpHeaders.Values.GZIP);
+            request.setHeader(HttpHeaders.Names.ACCEPT, "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2");
         }
-        request.setHeader(CONTENT_TYPE, contentType);
-        request.setHeader("Access-Control-Allow-Origin", "*");
-        request.setHeader(CONTENT_LENGTH, request.getContent().readableBytes());
+        else
+        {
+            String contentType = "application/json";
+            Map<String, String> headers = new HashMap<String, String>();
+            for (int i = 0; i < req.length; i++)
+            {
+                StringBuffer buff = io().readStream(req[i].cdata().data());
+                request.setContent(ChannelBuffers.copiedBuffer(buff.toString(), CharsetUtil.UTF_8));
+                if (req[i] instanceof HTTPRequestPData)
+                {
+                    HTTPRequestPData hpdata = (HTTPRequestPData)req[i];
+                    if ((hpdata.getContentType() != null) && (hpdata.getContentType().length() > 0))
+                        contentType = hpdata.getContentType();
 
-        for (String nm : headers.keySet())
-            request.setHeader(nm, headers.get(nm));
+                    Map<String, String> hdrs = hpdata.getHeaders();
+                    for (String name : hdrs.keySet())
+                        headers.put(name, hdrs.get(name));
+                }
+            }
+            request.setHeader(CONTENT_TYPE, contentType);
+            request.setHeader("Access-Control-Allow-Origin", "*");
+            request.setHeader(CONTENT_LENGTH, request.getContent().readableBytes());
+            request.setHeader(HttpHeaders.Names.HOST, _host);
+            request.setHeader(HttpHeaders.Names.USER_AGENT, "smart");
+
+            for (String nm : headers.keySet())
+                request.setHeader(nm, headers.get(nm));
+        }
 
         return request;
     }
@@ -146,12 +179,20 @@ public class NettyResponseReader implements HTTPMessageReader
     public Object transmitDefault()
         throws CtxException
     {
+
         HttpRequest request = new DefaultHttpRequest(HTTP_1_1, POST, _uri);
-        String buff = "";
-        request.setContent(ChannelBuffers.copiedBuffer(buff, CharsetUtil.UTF_8));
-        request.setHeader(CONTENT_TYPE, "application/json");
-        request.setHeader("Access-Control-Allow-Origin", "*");
-        request.setHeader(CONTENT_LENGTH, request.getContent().readableBytes());
+        if (_get)
+        {
+            request = new DefaultHttpRequest(HTTP_1_1, GET, _uri);
+        }
+        else
+        {
+            String buff = "";
+            request.setContent(ChannelBuffers.copiedBuffer(buff, CharsetUtil.UTF_8));
+            request.setHeader(CONTENT_TYPE, "application/json");
+            request.setHeader("Access-Control-Allow-Origin", "*");
+            request.setHeader(CONTENT_LENGTH, request.getContent().readableBytes());
+        }
         return request;
     }
 
@@ -172,6 +213,12 @@ public class NettyResponseReader implements HTTPMessageReader
     {
         HttpMessage request = (HttpMessage)msg;
         return HttpHeaders.isKeepAlive(request);
+    }
+
+    public boolean isOptionsRequest(Object msg)
+    {
+        HttpMessage request = (HttpMessage)msg;
+        return false;
     }
 }
 

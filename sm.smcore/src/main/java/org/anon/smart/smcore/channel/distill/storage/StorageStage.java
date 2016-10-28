@@ -50,6 +50,7 @@ import org.anon.smart.channels.distill.Distillate;
 import org.anon.smart.channels.distill.Distillation;
 import org.anon.smart.channels.distill.Rectifier;
 
+import org.anon.smart.base.tenant.CrossLinkSmartTenant;
 import org.anon.smart.smcore.flow.CrossLinkSmartFlow;
 import org.anon.smart.smcore.channel.server.EventRData;
 import org.anon.smart.smcore.channel.distill.alteration.AlteredData;
@@ -71,6 +72,11 @@ public class StorageStage implements Distillation
         _myRectifier = parent;
     }
 
+    protected void cleanup(CrossLinkSmartTenant tenant)
+        throws CtxException
+    {
+    }
+
     public Distillate distill(Distillate prev)
         throws CtxException
     {
@@ -90,12 +96,15 @@ public class StorageStage implements Distillation
         {
             Object event = evt.event();
             EventRData rdata = new EventRData(_myRectifier, pdata, event, searched.tenant(), searched.flowDeployment());
+            System.out.println("Flow is: " + evt.flow() + ":" + evt.getClass().getClassLoader() + ":" + evt.flow().getClass().getClassLoader());
             CrossLinkSmartFlow clsf = new CrossLinkSmartFlow(evt.flow());
             if(pdata instanceof MessagePData)
             	clsf.postInternal(rdata);
             else
             	clsf.postExternal(rdata);
         }
+
+        cleanup(searched.tenant());//here does nothing.
 
         //shd not be used after this stage
         return prev;

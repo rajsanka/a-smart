@@ -50,6 +50,12 @@ import org.anon.smart.base.anatomy.SmartModuleContext;
 import org.anon.smart.smcore.data.SmartData;
 import org.anon.smart.smcore.data.SmartDataTruth;
 import org.anon.smart.smcore.data.TruthCreator;
+import org.anon.smart.smcore.channel.client.pool.ClientObjectCreator;
+import org.anon.smart.channels.SmartChannel;
+import org.anon.smart.channels.shell.InternalConfig;
+import org.anon.smart.channels.shell.ExternalConfig;
+import org.anon.smart.smcore.events.SmartEvent;
+import org.anon.smart.smcore.channel.internal.MessageConfig;
 
 import static org.anon.utilities.services.ServiceLocator.*;
 import static org.anon.utilities.objservices.ObjectServiceLocator.*;
@@ -59,7 +65,7 @@ import org.anon.utilities.anatomy.ModuleContext;
 import org.anon.utilities.anatomy.JVMEnvironment;
 import org.anon.utilities.exception.CtxException;
 
-public class SMCoreContext implements SmartModuleContext
+public class SMCoreContext implements CoreContext
 {
     private SCShell _smartChannels;
     private LimitedMemCache<SmartData, SmartDataTruth> _truthCache;
@@ -122,6 +128,59 @@ public class SMCoreContext implements SmartModuleContext
         throws CtxException
     {
         return (SMCoreContext)anatomy().context(SMCoreContext.class);
+    }
+
+    public String[] getEnableFlows()
+    {
+        return new String[] { "AdminSmartFlow", "AllFlows" };
+    }
+
+    public void cleanup()
+        throws CtxException
+    {
+        _truthCache.cleanUp();
+        _truthCache = null;
+        ClientObjectCreator.cleanup();
+    }
+
+    public InternalConfig getMessageConfig(SmartEvent event)
+        throws CtxException
+    {
+        return new MessageConfig(event);
+    }
+
+    private String serverFor(String nm)
+        throws CtxException
+    {
+        SmartChannel chnl = _smartChannels.channelFor(nm);
+        if (chnl == null)
+            return null;
+        ExternalConfig cfg = (ExternalConfig)chnl.config();
+        return cfg.server();
+    }
+
+    private int portFor(String nm)
+        throws CtxException
+    {
+        SmartChannel chnl = _smartChannels.channelFor(nm);
+        if (chnl == null)
+            return -1;
+        ExternalConfig cfg = (ExternalConfig)chnl.config();
+        return cfg.port();
+    }
+
+    public static String server(String nm)
+        throws CtxException
+    {
+        SMCoreContext ctx = (SMCoreContext)anatomy().context(SMCoreContext.class);
+        return ctx.serverFor(nm);
+    }
+
+    public static int port(String nm)
+        throws CtxException
+    {
+        SMCoreContext ctx = (SMCoreContext)anatomy().context(SMCoreContext.class);
+        return ctx.portFor(nm);
     }
 }
 

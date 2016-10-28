@@ -45,6 +45,9 @@ import java.util.Iterator;
 import java.util.UUID;
 import java.util.List;
 
+import org.anon.smart.d2cache.ListParams;
+import org.anon.smart.d2cache.CacheableObject;
+
 import org.anon.utilities.utils.Repeatable;
 import org.anon.utilities.exception.CtxException;
 
@@ -69,14 +72,22 @@ public interface StoreConnection extends Repeatable
     public Object find(String group, Object key)
         throws CtxException;
 
-    public List<Object> search(String group, Object query)
+    public List<Store.SearchResult> search(String group, Object query, int size, int pn, int ps, String sby, boolean asc)
         throws CtxException;
     
-    public Iterator<Object> listAll(String group, int size)
-    	throws CtxException;
     public void remove(String group, Object key)
     	throws CtxException;
     public boolean exists(String group, Object key)
             throws CtxException;
+
+    public Iterator<Object> getListings(String group, String sortBy,
+            int listingsPerPage, int pageNum)
+       throws CtxException;
+
+    public Iterator<Object> list(ListParams parms)
+        throws CtxException;
+
+    public void registerMetadata(String group, Class<? extends CacheableObject> datacls)
+        throws CtxException;
 }
 

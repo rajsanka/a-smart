@@ -46,6 +46,8 @@ import org.anon.smart.channels.distill.Rectifier;
 import org.anon.smart.channels.distill.Distillate;
 import org.anon.smart.smcore.test.channel.TestPData;
 
+import org.anon.smart.channels.test.tcp.TestTCPPData;
+
 import org.anon.utilities.exception.CtxException;
 
 public class ResponseCollector implements Distillation
@@ -70,8 +72,16 @@ public class ResponseCollector implements Distillation
     public Distillate distill(Distillate prev)
         throws CtxException
     {
-        TestPData data = (TestPData)prev.current();
-        _response = data.getPosted();
+        if (prev.current() instanceof TestPData)
+        {
+            TestPData data = (TestPData)prev.current();
+            _response = data.getPosted();
+        }
+        else if (prev.current() instanceof TestTCPPData)
+        {
+            TestTCPPData data = (TestTCPPData)prev.current();
+            _response = data.getPosted();
+        }
         System.out.println(prev.current());
         if (_waitForResponse != null)
         {

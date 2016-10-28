@@ -64,7 +64,7 @@ public class TenantsHosted extends ApplicationSingleton implements TenantConstan
         throws CtxException
     {
         super();
-        _tenantSpace = (TransactDSpace)spaceFor(TENANTSPACENAME, true);
+        _tenantSpace = (TransactDSpace)spaceFor(TENANTSPACENAME, true, "disk");
     }
 
     private static void setSingleInstance(Object obj)
@@ -102,8 +102,22 @@ public class TenantsHosted extends ApplicationSingleton implements TenantConstan
         throws CtxException
     {
         TenantsHosted ts = (TenantsHosted)tenantsSpace();
-        SmartTenant t = new SmartTenant(tenant);
-        addToSpace(ts._tenantSpace, new DSpaceObject[] { t });
+        Object exist = TENANTS_HOSTED.getTenant(tenant);
+        SmartTenant t = null;
+        if (exist != null)
+        {
+            t = (SmartTenant)exist;
+            ((SmartTenant)exist).smart___resetNew();
+        }
+        else
+        {
+            t = new SmartTenant(tenant);
+        }
+        System.out.println("Tenant hosted: " + exist + ":" + t.smart___isNew());
+        //if (exist == null)
+        //    addToSpace(ts._tenantSpace, new DSpaceObject[] { t });
+        //else
+            addToSpace(ts._tenantSpace, new DSpaceObject[] { t }, new DSpaceObject[] { (SmartTenant)exist });
         return t;
     }
 
@@ -111,6 +125,11 @@ public class TenantsHosted extends ApplicationSingleton implements TenantConstan
         throws CtxException
     {
         TenantsHosted ts = (TenantsHosted)tenantsSpace();
+        Object exist = TENANTS_HOSTED.getTenant(tenant.getName());
+        if (exist != null)
+        {
+            ((SmartTenant)tenant).smart___resetNew();
+        }
         addToSpace(ts._tenantSpace, new DSpaceObject[] { tenant });
     }
 
@@ -144,7 +163,11 @@ public class TenantsHosted extends ApplicationSingleton implements TenantConstan
         throws CtxException
     {
         CrossLinkTenantsHosted th = new CrossLinkTenantsHosted(tenantsSpace());
-        return new CrossLinkSmartTenant(th.getTenant(name));
+        Object ten = th.getTenant(name);
+        if (ten != null)
+            return new CrossLinkSmartTenant(ten);
+
+        return null;
     }
 
     public static CrossLinkSmartTenant crosslinkedPlatformOwner()
@@ -166,7 +189,7 @@ public class TenantsHosted extends ApplicationSingleton implements TenantConstan
                 t.cleanup();
         }
         
-        SmartTenant ts = tenantFor(PLATFORMOWNER);
+        SmartTenant ts = tenantFor(PLATFORMOWNER, true);
         if (ts != null)
             ts.cleanup();
         _tenantSpace.cleanup();

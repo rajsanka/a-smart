@@ -60,8 +60,12 @@ public class FlowMode extends AbstractMode
         if ((obj != null) && (obj instanceof SmartData))
         {
             String flow = AnnotationUtils.flowFor(obj.getClass());
+            //Use the flow of the config instead of object?
+            /* RS -- debug why this is a problem in windows
+            String flow = AnnotationUtils.flowFor(cls);
             if (flow != null)
                 return new Object[] { flow };
+            */
         }
 
         return null;

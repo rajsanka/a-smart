@@ -45,31 +45,36 @@ import java.util.UUID;
 
 public class DataLegend implements java.io.Serializable
 {
-    private UUID _id;
-    private String _group;
+    private UUID ___smart_id___;
+    private String ___smart_group___;
 
-    private long _createdOn;
-    private long _lastModifiedOn;
-    private String _ownedBy;
-    private String _lastModifiedBy;
+    private long ___smart_createdOn___;
+    private long ___smart_lastModifiedOn___;
+    private String ___smart_ownedBy___;
+    private String ___smart_lastModifiedBy___;
 
     public DataLegend()
     {
-        _id = UUID.randomUUID();
-        _createdOn = System.nanoTime();
-        _lastModifiedOn = System.nanoTime();
+        ___smart_id___ = UUID.randomUUID();
+        ___smart_createdOn___ = System.nanoTime();
+        ___smart_lastModifiedOn___ = System.nanoTime();
         //TODO: pickup from thread for user
     }
 
-    public UUID id() { return _id; }
-    public String group() { return _group; }
-    public String ownedBy() { return _ownedBy; }
-    public String lastModifiedBy() { return _lastModifiedBy; }
+    public UUID id() { return ___smart_id___; }
+    public String group() { return ___smart_group___; }
+    public String ownedBy() { return ___smart_ownedBy___; }
+    public void setOwnedBy(String owner) { ___smart_ownedBy___ = owner; }
+    public String lastModifiedBy() { return ___smart_lastModifiedBy___; }
 
     public void stampData()
     {
-        _lastModifiedOn = System.nanoTime();
+        ___smart_lastModifiedOn___ = System.nanoTime();
         //TODO: pickup from thread for user
     }
+
+    public void setGroup(String grp) { ___smart_group___ = grp; }
+
+    public static boolean smart___expandIntoParent() { return true; }
 }
 

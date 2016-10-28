@@ -48,6 +48,10 @@ import org.anon.smart.smcore.transition.parms.PrimeDataProbe;
 import org.anon.smart.smcore.transition.parms.TxnDataProbe;
 import org.anon.smart.smcore.transition.parms.ConfigProbe;
 import org.anon.smart.smcore.transition.parms.LinkedDataProbe;
+import org.anon.smart.smcore.transition.parms.SearchDataProbe;
+import org.anon.smart.smcore.transition.parms.AllDataProbe;
+import org.anon.smart.smcore.transition.parms.SearchConfigProbe;
+import org.anon.smart.smcore.transition.parms.NeedsLinkDataProbe;
 import org.anon.smart.smcore.channel.server.CrossLinkEventRData;
 import org.anon.smart.smcore.transition.graph.TransitionGraphs;
 import org.anon.smart.base.tenant.CrossLinkSmartTenant;
@@ -74,6 +78,10 @@ public class TransitionService implements TConstants
         ParamType.registerProbe(CONFIG, new ConfigProbe(), false);
         ParamType.registerProbe(TXN, new TxnDataProbe(), true);
         ParamType.registerProbe(LINK, new LinkedDataProbe(), false);
+        ParamType.registerProbe(SEARCH, new SearchDataProbe(), true);
+        ParamType.registerProbe(NEEDSLINK, new NeedsLinkDataProbe(), true);
+        ParamType.registerProbe(SRCHCFG, new SearchConfigProbe(), true);
+        ParamType.registerProbe(ALL, new AllDataProbe(), true);
     }
 
     public static TransitionContext createContext(Object rdata, MessageSource source)
@@ -92,11 +100,17 @@ public class TransitionService implements TConstants
         assertion().assertNotNull(state, "Cannot find the state of the object: " + dataName + " to execute event: " + eventName);
         String fromstate = state.stateName();
         Graph graph = TransitionGraphs.getGraph(flow, dataName, eventName, extra, fromstate);
-        assertion().assertNotNull(graph, "No transitions found for: " + dataName + ":" + eventName + ":" + fromstate);
+        assertion().assertNotNull(graph, "No transitions found for: " + dataName + ":" + eventName + ":" + fromstate + ":" + flow);
         CrossLinkSmartTenant tenant = CrossLinkSmartTenant.currentTenant();
         RuntimeShell rtshell = (RuntimeShell)tenant.runtimeShell();
         TransitionContext tctx = new TransitionContext(rdata, rtshell.transitionExecutor(), graph, source);
         return tctx;
+    }
+
+    public static void cleanup()
+        throws CtxException
+    {
+        TransitionGraphs.cleanup();
     }
 }
 

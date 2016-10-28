@@ -42,6 +42,7 @@
 package org.anon.smart.secure.anatomy;
 
 import java.util.Map;
+import java.util.List;
 import java.util.HashMap;
 
 import org.anon.smart.base.flow.FlowConstants;
@@ -53,6 +54,9 @@ import org.anon.smart.deployment.MacroDeployer;
 import org.anon.smart.secure.stt.SecureSTTService;
 import org.anon.smart.secure.sdomain.SmartSecurityManager;
 import org.anon.smart.secure.inbuilt.transition.TransitionService;
+import org.anon.smart.secure.transition.TransitionParmService;
+import org.anon.smart.secure.application.ApplicationService;
+import org.anon.smart.secure.flow.SecureFlowService;
 
 
 import org.anon.utilities.anatomy.AModule;
@@ -73,8 +77,10 @@ public class SecureModule extends AModule implements FlowConstants
     protected void setup()
         throws CtxException
     {
+        TransitionParmService.initialize();
         SecureSTTService.initialize();
         TransitionService.initialize();
+        SecureFlowService.initialize();
     }
 
     public Repeatable repeatMe(RepeaterVariants vars)
@@ -93,6 +99,8 @@ public class SecureModule extends AModule implements FlowConstants
         SecureContext smctx = (SecureContext)_context;
         SecureConfig ccfg = (SecureConfig)cfg;
 
+        ApplicationService.initialize();
+
         if (ccfg.firstJVM())
         {
             //the smcore should have initialized before this, hence this shd just deploy and use??
@@ -100,7 +108,7 @@ public class SecureModule extends AModule implements FlowConstants
             SmartTenant powner = TenantsHosted.platformOwner();
             //enable before committing, else the space will not be present
             for (String flow : features.keySet())
-                powner.deploymentShell().enableForMe(flow, features.get(flow), new HashMap<String, String>());
+                powner.deploymentShell().enableForMe(flow, features.get(flow), new HashMap<String, List<String>>(), true, true);
 
             TransitionService.setupDefaultRolesAndUsers(powner);
             System.out.println("STARTED SECURE MODULE");

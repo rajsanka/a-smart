@@ -63,6 +63,7 @@ public class BasicSolrConfig implements SolrConfig {
             _solrHome = path + "/solr-datastore/";
         }
 	}
+
 	@Override
 	public String getIndexHome() {
 		// TODO Auto-generated method stub

@@ -7,8 +7,8 @@ import org.anon.smart.channels.shell.SCType;
 
 public class HTTPUploadConfig extends HTTPConfig {
 
-	public HTTPUploadConfig(int port, boolean secure) {
-		super(port, secure);
+	public HTTPUploadConfig(String nm, int port, boolean secure) {
+		super(nm, port, secure);
 		
 	}
 

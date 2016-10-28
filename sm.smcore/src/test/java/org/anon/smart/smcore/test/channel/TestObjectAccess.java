@@ -72,7 +72,7 @@ public class TestObjectAccess
     {
         Rectifier rr = new Rectifier();
         rr.addStep(new TestDistillation());
-        HTTPConfig ccfg = new HTTPConfig(port, false);
+        HTTPConfig ccfg = new HTTPConfig("Test", port, false);
         ccfg.setClient();
         ccfg.setServer(server);
         ccfg.setRectifierInstinct(rr, new TestDataFactory());
@@ -106,15 +106,6 @@ public class TestObjectAccess
         clnt.deployFromSampleJar();
         clnt.createTenant();
 
-        /*postTo(shell, port, "localhost", "/SmartOwner/AdminSmartFlow/DeployEvent", 
-        		"{'TenantAdmin':{'___smart_action___':'lookup', '___smart_value___':'SmartOwner'}, " +
-        		"'deployJar':'" + home + "/.m2/repository/org/anon/sampleapp/sampleapp/1.0-SNAPSHOT/sampleapp-1.0-SNAPSHOT.jar','flowsoa':'RegistrationFlow.soa'}");
-        System.out.println("Zzzzzzzz 1 Min after deploy------------------------");
-        Thread.sleep(10000); //response shd have come within 3s
-       // postTo(shell, port, "localhost", "/SmartOwner/AdminSmartFlow/NewTenant", "{'TenantAdmin':{'___smart_action___':'lookup', '___smart_value___':'SmartOwner'}, 'tenant':'newtenant','enableFlow':'RegistrationFlow','enableFeatures':['all']}");
-        //System.out.println("Zzzzzzzz 1 Min after Tenant Creation-----------------------");
-        Thread.sleep(10000);*/
-        
         for (int i = 0; i < 1; i++)
         {
             clnt.post("RegisterEvent", "{'FlowAdmin':{'___smart_action___':'lookup', '___smart_value___':'RegistrationFlow'}, 'email':'vjaasti" + i + "@gmail.com',  'password':[\"91\", \"92\"], 'salary':'20000'}");
@@ -152,7 +143,7 @@ public class TestObjectAccess
         System.out.println("Running search event.................");
         //Search
         resp = clnt.post("SearchEvent",
-        		"{'FlowAdmin':{'___smart_action___':'lookup', '___smart_value___':'RegistrationFlow'}, 'group':'Registration', 'queryMap':{'email':'vjaasti0@gmail.com'}}");
+        		"{'FlowAdmin':{'___smart_action___':'lookup', '___smart_value___':'RegistrationFlow'}, 'group':'Registration', 'queryMap':{'email':'vjaasti0@gmail.com'},'size':100}");
         System.out.println("Zzzzzzzz 1 Min after Search----------------------");
         
         //Thread.sleep(10000);
@@ -166,7 +157,7 @@ public class TestObjectAccess
         System.out.println("Running search event with Integer field.................");
         //Search
         resp = clnt.post("SearchEvent",
-        		"{'FlowAdmin':{'___smart_action___':'lookup', '___smart_value___':'RegistrationFlow'}, 'group':'Registration', 'queryMap':{'weight':'0.0'}}");
+        		"{'FlowAdmin':{'___smart_action___':'lookup', '___smart_value___':'RegistrationFlow'}, 'group':'Registration', 'queryMap':{'weight':'0.0'},'size':100}");
         System.out.println("Zzzzzzzz 1 Min after Search----------------------");
         
         //Thread.sleep(10000);

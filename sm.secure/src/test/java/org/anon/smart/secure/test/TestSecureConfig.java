@@ -53,7 +53,7 @@ public class TestSecureConfig extends TestStartConfig implements SecureConfig
     public TestSecureConfig(String[] deploy, String[] tenants, Map<String, String[]> enable, int port)
     {
         super(deploy, tenants, enable, port);
-        _channels[0] = new SecureEventServerConfig(port, false);
+        _channels[0] = new SecureEventServerConfig("Test", port, false);
     }
 }
 

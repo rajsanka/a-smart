@@ -64,5 +64,10 @@ public class AbstractChannel implements SmartChannel
     {
         return _id;
     }
+
+    public SCConfig config()
+    {
+        return _config;
+    }
 }
 

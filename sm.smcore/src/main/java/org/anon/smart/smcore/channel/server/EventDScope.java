@@ -92,8 +92,17 @@ public class EventDScope extends HTTPMessageDScope
     protected void handleHeader(String key, String value)
     {
         super.handleHeader(key, value);
-        if (key.equalsIgnoreCase("Session-Id"))
-            _sessionId = UUID.fromString(value);
+        if (key.equalsIgnoreCase("Session-Id") && (value != null) && (value.length() > 0))
+        {
+            try
+            {
+                _sessionId = UUID.fromString(value);
+            }
+            catch (Exception e)
+            {
+                _sessionId = null;
+            }
+        }
     }
 
     public String tenant() { return _tenant; }
@@ -107,6 +116,11 @@ public class EventDScope extends HTTPMessageDScope
         CrossLinkEventLegend legend = new CrossLinkEventLegend(_sessionId, _origin, ldr);
         legend.stampReceived(primary().receivedTime());
         return legend.link();
+    }
+
+    public boolean isKeepAlive()
+    {
+        return _keepAlive;
     }
 }
 

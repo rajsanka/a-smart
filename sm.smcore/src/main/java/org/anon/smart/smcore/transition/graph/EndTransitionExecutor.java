@@ -45,6 +45,9 @@ import java.util.Map;
 import java.util.HashMap;
 
 import org.anon.smart.smcore.transition.TransitionContext;
+import org.anon.smart.smcore.events.SmartEventResponse;
+import org.anon.smart.smcore.events.SmartERTxnObject;
+import org.anon.smart.smcore.inbuilt.responses.ErrorResponse;
 
 import org.anon.utilities.cthreads.CtxRunnable;
 import org.anon.utilities.cthreads.CThreadContext;
@@ -78,17 +81,36 @@ public class EndTransitionExecutor implements CtxRunnable
             if ((_context instanceof TransitionContext) && (_parent.hasCompleted()))
             {
                 TransitionContext gctx = (TransitionContext)_context;
-                if (gctx.graphDone())
+                boolean done = gctx.graphDone();
+                System.out.println("Running the completed: " + done);
+                if (done)
                 {
-                    gctx.atomicity().finish();
+                    try
+                    {
+                        System.out.println("Calling finish of atomicity: ");
+                        gctx.atomicity().finish();
+                    }
+                    catch (Exception e1)
+                    {
+                        e1.printStackTrace();
+                        //force send. Atomicity has not given an exception
+                        Object response = new ErrorResponse(ErrorResponse.servererrors.exception, e1);
+                        SmartERTxnObject txnobj = new SmartERTxnObject((SmartEventResponse)response);
+                        txnobj.accept(gctx.id(), txnobj);
+                        txnobj.end(gctx.id());
+                        gctx.doneWithContext();//finish it so that we can continue further.
+                    }
                 }
             }
-            _hasCompleted = true;
         }
         catch (Exception e)
         {
             //TODO:
             e.printStackTrace();
+        }
+        finally
+        {
+            _hasCompleted = true;
         }
     }
 

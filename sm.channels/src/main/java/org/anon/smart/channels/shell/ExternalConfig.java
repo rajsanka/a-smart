@@ -43,6 +43,7 @@ package org.anon.smart.channels.shell;
 
 public interface ExternalConfig extends SCConfig
 {
+    public String name();
     public int port();
     public String server();
 }

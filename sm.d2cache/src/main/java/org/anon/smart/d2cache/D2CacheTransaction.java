@@ -61,5 +61,8 @@ public interface D2CacheTransaction
 
     public void rollback()
         throws CtxException;
+
+    public void waitToComplete()
+        throws CtxException;
 }
 

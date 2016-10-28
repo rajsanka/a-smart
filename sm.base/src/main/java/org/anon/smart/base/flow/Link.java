@@ -110,10 +110,13 @@ public class Link implements Constants
     private String from;
     private String to;
     private String via;
+    private String viaflow;
+    private boolean optional;
 
     private LinkObject _fromObject;
     private LinkObject _toObject;
     private LinkObject _via;
+    private LinkObject _viaFlow;
     private boolean _internal;
 
     public Link()
@@ -128,6 +131,9 @@ public class Link implements Constants
         from = lnk.from;
         to = lnk.to;
         via = lnk.via;
+        viaflow = lnk.viaflow;
+        optional = lnk.optional;
+        System.out.println("When copying link: " + optional + ":" + lnk.optional + ":" + name);
 
         if (lnk._fromObject != null)
             _fromObject = new LinkObject(lnk._fromObject);
@@ -137,6 +143,9 @@ public class Link implements Constants
 
         if (lnk._via != null)
             _via = new LinkObject(lnk._via);
+
+        if (lnk._viaFlow != null)
+            _viaFlow = new LinkObject(lnk._viaFlow);
     }
 
     public String getVia() { return via; }
@@ -144,11 +153,13 @@ public class Link implements Constants
     public String getName() { return name; }
     public String getFrom() { return from; }
     public String getTo() { return to; }
+    public String getViaFlow() { return viaflow; }
 
     void setup(String currFlow)
         throws CtxException
     {
         _internal = false;
+        System.out.println("Optional for: " + name + " during setup is; " + optional + ":" + viaflow);
         if ((from != null) && (from.length() > 0))
             _fromObject = new LinkObject(from, currFlow);
 
@@ -158,12 +169,16 @@ public class Link implements Constants
         if ((via != null) && (via.length() > 0))
             _via = new LinkObject(via, currFlow);
 
+        if ((viaflow != null) && (viaflow.length() > 0))
+            _viaFlow = new LinkObject(viaflow, currFlow);
+
         //assertion().assertTrue(_fromObject.getFlow().equals(currFlow), "All links have to be from objects in the current flow to other flows or within current flow.");
     }
 
     public LinkObject getFromObject() { return _fromObject; }
     public LinkObject getToObject() { return _toObject; }
     public LinkObject getViaObject() { return _via; }
+    public LinkObject getViaFlowObject() { return _viaFlow; }
 
     public boolean linkFor(String flow, String obj)
     {
@@ -177,7 +192,7 @@ public class Link implements Constants
 
     public String toString()
     {
-        return "From: " + _fromObject + " To: " + _toObject;
+        return "From: " + _fromObject + " To: " + _toObject + ":" + _viaFlow;
     }
 
     public String groupFor()
@@ -194,6 +209,12 @@ public class Link implements Constants
         to = asto;
         _toObject = new LinkObject(asto, currFlow);
         _internal = internal;
+    }
+
+    public boolean isOptional()
+    {
+        //System.out.println("Optional for: " + name + ":" + optional);
+        return optional;
     }
 }
 

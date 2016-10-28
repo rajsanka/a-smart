@@ -66,13 +66,15 @@ public class CoreServerUtilities extends ServerUtilities implements ModConstants
         for (int i = 0; i < urls.length; i++)
             mod.add(urls[i]);
         mod.add(new URL(PathHelper.getJar(true, BASE)));
+        mod.add(new URL(PathHelper.getJar(true, MONITOR)));
+        System.out.println("Got URLs: " + mod);
         return mod.toArray(new URL[0]);
     }
 
     @Override
     protected String[] getModules()
     {
-        String[] comps = new String[] { "org.anon.smart.smcore.anatomy.SMCoreModule", "org.anon.smart.base.test.testanatomy.TestModule" };
+        String[] comps = new String[] { "org.anon.smart.smcore.anatomy.SMCoreModule", "org.anon.smart.base.test.testanatomy.TestModule", "org.anon.smart.monitor.anatomy.MonitorModule" };
         return comps;
     }
 

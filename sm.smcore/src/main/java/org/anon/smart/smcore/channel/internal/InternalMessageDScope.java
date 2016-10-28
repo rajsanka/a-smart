@@ -46,6 +46,8 @@ import static org.anon.utilities.objservices.ObjectServiceLocator.anatomy;
 import java.util.UUID;
 
 import org.anon.smart.base.tenant.CrossLinkSmartTenant;
+import org.anon.smart.base.tenant.TenantsHosted;
+import org.anon.smart.base.utils.AnnotationUtils;
 import org.anon.smart.channels.Route;
 import org.anon.smart.channels.data.BaseResponder;
 import org.anon.smart.channels.data.DScope;
@@ -56,6 +58,8 @@ import org.anon.smart.smcore.events.CrossLinkEventLegend;
 import org.anon.smart.smcore.events.SmartEvent;
 import org.anon.utilities.atomic.AtomicCounter;
 import org.anon.utilities.exception.CtxException;
+
+import static org.anon.utilities.services.ServiceLocator.*;
 
 public class InternalMessageDScope implements DScope {
 
@@ -84,7 +88,33 @@ public class InternalMessageDScope implements DScope {
 		//_flow = event.smart___flowname();
 		_eventName = event.smart___name();
 		_sessionId =  UUID.randomUUID();//event.smart___legend().sessionID(); //TODO
-		_tenant = CrossLinkSmartTenant.currentTenant().getName();
+        CrossLinkSmartTenant t = CrossLinkSmartTenant.currentTenant();
+		_tenant = t.getName();
+        //RS: This is specifically done only for admin events and messages. Need to see if we want to standardize this.
+        //THis is cross posting into another tenant.
+        if ((event.getClass().getName().equals("org.anon.smart.smcore.inbuilt.events.NewInternalTenant") || 
+                event.getClass().getName().equals("org.anon.smart.smcore.inbuilt.events.InternalEnableFlow") || 
+                event.getClass().getName().equals("org.anon.smart.smcore.inbuilt.events.InternalDeployEvent")) && 
+                t.controlsAdmin())
+        {
+            CrossLinkSmartTenant ptenant = TenantsHosted.crosslinkedPlatformOwner();
+            _tenant = ptenant.getName();
+        }
+        else if (t.isPlatformOwner())
+        {
+            //platform owner can post into other tenants.
+            String crosspost = AnnotationUtils.crosspostFor(event.getClass());
+            if (crosspost != null)
+            {
+                Object val = reflect().getAnyFieldValue(event.getClass(), event, crosspost);
+                if ((val != null) && (val.toString().length() > 0))
+                {
+                    CrossLinkSmartTenant ctenant = TenantsHosted.crosslinkedTenantFor(val.toString());
+                    assertion().assertNotNull(ctenant, "Cannot find tenant " + val + " to post to.");
+                    _tenant = ctenant.getName();
+                }
+            }
+        }
 		_event = event;
 		_responder = new BaseResponder(_requestID);
 		
@@ -168,6 +198,11 @@ public class InternalMessageDScope implements DScope {
             CrossLinkEventLegend legend = new CrossLinkEventLegend(_sessionId, _origin, ldr);
             legend.stampReceived(primary().receivedTime());
             return legend.link();
+    }
+
+    public boolean isKeepAlive()
+    {
+        return false;
     }
 
 }

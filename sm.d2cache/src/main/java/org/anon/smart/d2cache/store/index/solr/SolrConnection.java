@@ -52,6 +52,7 @@ import java.util.List;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.core.CoreContainer;
+import org.apache.solr.core.SolrCore;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
@@ -59,9 +60,12 @@ import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 
 import org.anon.smart.d2cache.QueryObject;
+import org.anon.smart.d2cache.CacheableObject;
 import org.anon.smart.d2cache.store.StoreTransaction;
 import org.anon.smart.d2cache.store.StoreConnection;
 import org.anon.smart.d2cache.store.StoreConfig;
+import org.anon.smart.d2cache.store.Store;
+import org.anon.smart.d2cache.ListParams;
 
 import static org.anon.utilities.services.ServiceLocator.*;
 
@@ -73,10 +77,12 @@ import org.anon.utilities.logger.Logger;
 
 public class SolrConnection implements StoreConnection, Constants
 {
-    private static EmbeddedSolrServer _server;
-    private static CoreContainer _container;
+    private EmbeddedSolrServer _server;
+    //private static CoreContainer _container;
     private StoreConfig _config;
     private File _home;
+    private String _homeFile;
+    private String _corename;
     
     private static SolrConnection _connection;
     
@@ -95,14 +101,15 @@ public class SolrConnection implements StoreConnection, Constants
         _config = cfg;
         try
         {
-        	if(_container == null)
+        	//if(_container == null)
         	{
             SolrConfig scfg = (SolrConfig)cfg;
             _home = new File(scfg.getIndexHome());
+            _homeFile = scfg.getIndexHome();
             assertion().assertTrue(_home.exists(), "The solr home directory does not exist. Please setup solr correctly." + scfg.getIndexHome());
             File solr = new File(_home, CORE_CONFIG);
             assertion().assertTrue(solr.exists(), "The solr config file does not exist. Please setup solr correctly." + CORE_CONFIG);
-            _container = new CoreContainer(scfg.getIndexHome(), solr);
+            //_container = new CoreContainer(scfg.getIndexHome(), solr);
             //_container.load(scfg.getIndexHome(), solr);
         	}
         
@@ -127,8 +134,11 @@ public class SolrConnection implements StoreConnection, Constants
         	{
         		corename = name.split(CORENAME_DELIM, 2)[0];
         	}
+
+            _corename = corename;
             
         	//System.out.println("CORE NAME is :"+corename);
+            CoreContainer container = SolrContainerSingleton.getContainer(_homeFile);
             File f = new File(_home, corename);
             if (!f.exists())
             {
@@ -138,18 +148,46 @@ public class SolrConnection implements StoreConnection, Constants
                 url = getClass().getClassLoader().getResource(SCHEMA_CONFIG);
                 assertion().assertTrue((url != null), "The solr config and schema jars are not a part of the classpath. Please include it.");
                 f.mkdirs(); //create the directory
-
                 //have to test if there needs to be synchronization
-                _server = new EmbeddedSolrServer(_container, DEFAULT_CORE);
+                _server = new EmbeddedSolrServer(container, DEFAULT_CORE);
                 CoreAdminRequest.createCore(corename, corename, _server, SOLR_CONFIG, SCHEMA_CONFIG);
                 CoreAdminRequest.persist(CORE_CONFIG, _server);
-                _server = new EmbeddedSolrServer(_container, corename);
+                _server = new EmbeddedSolrServer(container, corename);
                 _logger.info("Solr server opened for connections:"+_server+"::"+corename);
              }
             else
             {
-            	_server = new EmbeddedSolrServer(_container, corename);
-            	_logger.info(">>>>>>>>>>>>>>>>>Solr server opened for connections:"+_server+"::"+corename);
+                _logger.info("Core "+corename+" exists:reloading........");
+                
+                /*** WorkAround till correct solution ***/
+                SolrCore core = container.getCore(corename);
+                try
+                {
+                    if (core != null)
+                    {
+                        String iDir = core.getIndexDir();
+                        String indexLock = iDir+File.separator+"write.lock";
+                        File iFile = new File(indexLock);
+                        if(iFile.isFile())
+                        {
+                            System.out.println("********* Deleting unremoved index lock file **********");
+                            iFile.delete();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+                finally
+                {
+                    core.close();//close to release references
+                    System.out.println(">>>>>>>>>>>>>>>>>Solr core closed:"+corename + ":" + core.getOpenCount());
+                }
+                /*** WorkAround till correct solution END ***/
+                
+                _server = new EmbeddedSolrServer(container, corename);
+                _logger.info(">>>>>>>>>>>>>>>>>Solr server opened for connections:"+_server+"::"+corename);
             }
         	}
         }
@@ -184,13 +222,22 @@ public class SolrConnection implements StoreConnection, Constants
     public void close()
         throws CtxException
     {
-    	System.out.println("!!!!!!!!!!!!!!!!!  Closing Solr Server !!!!!!!!!!!!!!!!!");
+    	System.out.println("!!!!!!!!!!!!!!!!!  Closing Solr Server !!!!!!!!!!!!!!!!!" + _server);
         if (_server != null)
         {
-        	_container.shutdown();
-            _server.shutdown();
-            
+        	//_container.shutdown();
+            //_server.shutdown();
+            //_container = null;
+            CoreContainer container = _server.getCoreContainer();
+            if (container != null)
+            {
+                //checking if this releases the resources of the core.
+                //container.reload(_corename);
+            }
+            _server = null;
         }
+
+        _connection = null;
     }
 
     public Object find(String group, Object key)
@@ -210,21 +257,29 @@ public class SolrConnection implements StoreConnection, Constants
 	}
 
 	@Override
-	public List<Object> search(String group, Object query) throws CtxException {
-		List<Object> resultSet = new ArrayList<Object>();
+	public List<Store.SearchResult> search(String group, Object query, int size, int pn, int ps, String sby, boolean asc) 
+        throws CtxException 
+    {
+		List<Store.SearchResult> resultSet = new ArrayList<Store.SearchResult>();
 		QueryObject qo = (QueryObject)query;
-		SolrQuery solrQuery = SolrQueryConstructor.getQuery(group, qo);
+		SolrQuery solrQuery = SolrQueryConstructor.getQuery(group, qo, size, pn, ps, sby, asc);
 		try {
 			perf().startHere("SolrSearch");
 			QueryResponse qr = _server.query(solrQuery);
 			SolrDocumentList docList = qr.getResults();
+            qo.setNumFound(docList.getNumFound());
 			perf().checkpointHere("SolrSearch");
 			for(SolrDocument doc : docList)
 			{
-				resultSet.add(doc.getFieldValue(ID_COLUMN));
+			    if(doc.getFieldValue(ID_COLUMN) != null)
+			    {
+			        UUID id = UUID.fromString((String)doc.getFieldValue(ID_COLUMN));
+                    Store.SearchResult res = new Store.SearchResult(id, null);
+			        resultSet.add(res);
+			    }
 			}
 			perf().dumpHere(_logger);
-			
+			System.out.println("Got after search: " + resultSet.size());
 			
 		} catch (SolrServerException e) {
 			except().rt(e, new CtxException.Context("SolrConnection.search", "Exception while querying"));
@@ -232,11 +287,33 @@ public class SolrConnection implements StoreConnection, Constants
 		return resultSet;
 	}
 
-	@Override
-	public Iterator<Object> listAll(String group, int size) throws CtxException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public SolrDocument lookup(String idcol, String id)
+        throws CtxException
+    {
+        SolrDocument doc = null;
+        try
+        {
+            SolrQuery query = new SolrQuery();
+            query.setQuery( idcol + ":" + id );
+            QueryResponse response = _server.query( query );
+            SolrDocumentList docList = response.getResults();
+            if (docList.size() > 0)
+                doc = docList.get(0);
+        }
+        catch (Exception e)
+        {
+            except().rt(e, new CtxException.Context("SolrConnection.lookup", "Exception while lookup: "));
+        }
+
+        return doc;
+    }
+
+    public Iterator<Object> list(ListParams parms)
+        throws CtxException
+    {
+        //NO IMPLEMENTATION
+        return null;
+    }
 	
 	public static SolrConnection getConnection()
 	{
@@ -253,6 +330,19 @@ public class SolrConnection implements StoreConnection, Constants
     {
         // TODO Auto-generated method stub
         return false;
+    }
+
+    @Override
+    public Iterator<Object> getListings(String group, String sortBy,
+            int listingsPerPage, int pageNum)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void registerMetadata(String group, Class<? extends CacheableObject> datacls)
+        throws CtxException
+    {
     }
 }
 

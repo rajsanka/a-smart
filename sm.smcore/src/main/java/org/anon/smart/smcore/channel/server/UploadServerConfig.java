@@ -55,8 +55,8 @@ import org.anon.utilities.objservices.ConvertService.translator;
  */
 public class UploadServerConfig extends HTTPUploadConfig {
 
-	public UploadServerConfig(int port, boolean secure) {
-		super(port, secure);
+	public UploadServerConfig(String nm, int port, boolean secure) {
+		super(nm, port, secure);
 		Rectifier rectifier = new Rectifier();
 
 

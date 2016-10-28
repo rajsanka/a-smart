@@ -52,12 +52,21 @@ import org.anon.utilities.exception.CtxException;
 public class TestCacheUtil {
 
 	public static void setTestData(D2Cache cache, Object obj, Object[] keys, String group)
-	throws CtxException {
+        throws CtxException 
+    {
+        try
+        {
 		D2CacheTransaction txn =  cache.startTransaction(UUID.randomUUID());
 		StoreItem item = new StoreItem(keys, null, group);
 		item.setModified(obj);
 		txn.add(item);
 		txn.commit();
+        txn.waitToComplete();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
 		
 	}
 	
@@ -71,5 +80,6 @@ public class TestCacheUtil {
 		}
 		
 		txn.commit();
+        txn.waitToComplete();
 	}
 }

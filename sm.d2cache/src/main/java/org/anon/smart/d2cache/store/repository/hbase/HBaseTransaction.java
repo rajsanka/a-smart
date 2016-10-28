@@ -63,7 +63,7 @@ public class HBaseTransaction extends AbstractStoreTransaction
         super(txn, conn);
     }
 
-    protected StoreRecord createNewRecord(String group, Object primarykey, Object curr, Object orig)
+    protected StoreRecord createNewRecord(String group, Object primarykey, Object curr, Object orig, boolean isnew)
         throws CtxException
     {
     	return new HBaseRecord(group, primarykey, curr, orig, (HBaseConnection)_connection);
@@ -117,9 +117,14 @@ public class HBaseTransaction extends AbstractStoreTransaction
 
 	@Override
 	public StoreRecord addRecord(String group, Object primarykey, Object curr,
-			Object orig, Object relatedKey) throws CtxException {
+			Object orig, Object relatedKey, boolean isnew) throws CtxException {
 		RelatedObject obj = new RelatedObject(relatedKey);
-		return addRecord(group, primarykey, obj, null);
+		return addRecord(group, primarykey, obj, null, isnew);
 	}
+
+    public boolean shouldStore(String storeIn)
+    {
+        return ((storeIn == null) || (storeIn.length() <= 0) || (storeIn.indexOf("repository") >= 0));
+    }
 }
 

@@ -61,7 +61,7 @@ public class TestObjectStorage {
 	{
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
         String home = System.getenv("HOME");
 		config.createIndexConfig(home + "/solr/solr-datastore/");
 		config.createStoreConfig("hadoop", "2181", "hadoop:60000", false);
@@ -84,7 +84,7 @@ public class TestObjectStorage {
 			throws CtxException {
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
         String home = System.getenv("HOME");
 		config.createIndexConfig(home + "/solr/solr-datastore/");
 		config.createStoreConfig("hadoop", "2181", "hadoop:60000", false);

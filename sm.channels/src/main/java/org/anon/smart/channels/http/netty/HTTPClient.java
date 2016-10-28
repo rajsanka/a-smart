@@ -67,10 +67,10 @@ public class HTTPClient extends NettyClientChannel implements HTTPClientChannel
     protected void initialize(SCShell shell, SCConfig cfg)
         throws CtxException
     {
-        super.initialize(shell, cfg);
         HTTPConfig httpcfg = (HTTPConfig)cfg;
         if (httpcfg.makeSecure())
             _sslContext = new ServerSSLContext(httpcfg);
+        super.initialize(shell, cfg);
     }
 
     @Override
@@ -84,8 +84,20 @@ public class HTTPClient extends NettyClientChannel implements HTTPClientChannel
         throws CtxException
     {
         NettyResponseReader rrdr = (NettyResponseReader)_reader;
+        rrdr.resetGet();
         rrdr.setURI(uri);
+        rrdr.setHost(((HTTPConfig)_config).server());
         super.post(post);
+    }
+
+    public void get(String uri)
+        throws CtxException
+    {
+        NettyResponseReader rrdr = (NettyResponseReader)_reader;
+        rrdr.setGet();
+        rrdr.setURI(uri);
+        rrdr.setHost(((HTTPConfig)_config).server());
+        super.post(null);
     }
 }
 

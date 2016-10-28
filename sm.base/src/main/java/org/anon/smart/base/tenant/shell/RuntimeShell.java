@@ -55,11 +55,14 @@ import org.anon.smart.base.flow.FlowModel;
 import org.anon.smart.base.flow.FlowAdmin;
 import org.anon.smart.base.tenant.CrossLinkSmartTenant;
 import org.anon.smart.base.tenant.TenantConstants;
+import org.anon.smart.d2cache.ListParams;
 
 import static org.anon.smart.base.utils.AnnotationUtils.*;
 import static org.anon.utilities.objservices.ObjectServiceLocator.*;
 import static org.anon.utilities.services.ServiceLocator.*;
 
+import org.anon.utilities.scheduler.Scheduler;
+import org.anon.utilities.scheduler.ScheduleTask;
 import org.anon.utilities.pool.Pool;
 import org.anon.utilities.pool.PoolEntity;
 import org.anon.utilities.fsm.FiniteStateMachine;
@@ -67,9 +70,12 @@ import org.anon.utilities.exception.CtxException;
 
 public class RuntimeShell implements SmartShell, TenantConstants
 {
+    private static final String SYSTEM_RUNTIME = "systemContext";
+
     private transient ShellContext _context;
     private transient Map<Class, Pool> _transitionPool;
     private ExecutorService _transitionExecutor;
+    private Scheduler _scheduler;
 
     public RuntimeShell()
         throws CtxException
@@ -83,11 +89,26 @@ public class RuntimeShell implements SmartShell, TenantConstants
         _context = new ShellContext();
         _transitionPool = new ConcurrentHashMap<Class, Pool>();
         _transitionExecutor = anatomy().jvmEnv().executorFor("Transition", _context.name());
+        _scheduler = new Scheduler();
     }
 
     public void cleanup()
         throws CtxException
     {
+        if (_transitionExecutor != null)
+            _transitionExecutor.shutdownNow();
+
+        _transitionExecutor = null;
+
+        if (_scheduler != null)
+            _scheduler.shutdown();
+
+        _scheduler = null;
+
+        if (_context != null)
+            _context.cleanup();
+
+        _context = null;
     }
 
     public Object lookupFor(String spacemodel, String group, Object key)
@@ -118,18 +139,46 @@ public class RuntimeShell implements SmartShell, TenantConstants
         return lookupFor(CONFIG_SPACE, group, key);
     }
 
-    public List<Object> searchFor(String spacemodel, Class clz, Map<String, String> query)
+    public void registerFor(String spacemodel, String group, Class<? extends DSpaceObject> data)
         throws CtxException
     {
         DataShell shell = (DataShell)_context.tenant().dataShellFor(spacemodel);
-        return shell.search(spacemodel, clz, query);
+        shell.registerIn(spacemodel, group, data);
+    }
+
+    public void registerMonitorFor(String group, Class<? extends DSpaceObject> data)
+        throws CtxException
+    {
+        DataShell shell = (DataShell)_context.tenant().dataShellFor(MONITOR_SPACE);
+        shell.registerIn(MONITOR_SPACE, group, data);
+    }
+
+    public Object lookupMonitorFor(String group, Object key)
+        throws CtxException
+    {
+        return lookupFor(MONITOR_SPACE, group, key);
+    }
+
+    public List<Object> searchFor(String spacemodel, Class clz, Map<String, String> query, long size, long pageNum, long pageSize, String sortBy, boolean asc)
+        throws CtxException
+    {
+        DataShell shell = (DataShell)_context.tenant().dataShellFor(spacemodel);
+        return shell.search(spacemodel, clz, query, size, pageNum, pageSize, sortBy, asc);
     }
     
-    public List<Object> listAll(String spacemodel, String group, int size)
+    public List<Object> listAll(String spacemodel, String group, int size, String datatype)
     	throws CtxException
     {
     	DataShell shell = (DataShell)_context.tenant().dataShellFor(spacemodel);
-        return shell.listAll(spacemodel, group, size);
+        ListParams parms = new ListParams(group, datatype, size);
+        return shell.listAll(spacemodel, parms);
+    }
+
+    public List<Object> listAll(String spacemodel, ListParams parms)
+    	throws CtxException
+    {
+    	DataShell shell = (DataShell)_context.tenant().dataShellFor(spacemodel);
+        return shell.listAll(spacemodel, parms);
     }
 
     public TransactDSpace getSpaceFor(String spacemodel)
@@ -137,6 +186,14 @@ public class RuntimeShell implements SmartShell, TenantConstants
     {
         DataShell shell = (DataShell)_context.tenant().dataShellFor(spacemodel);
         return shell.getSpaceFor(spacemodel);
+    }
+
+    public void commitToSpace(String spacemodel, DSpaceObject[] objects, DSpaceObject[] origs)
+        throws CtxException
+    {
+        //Please DO NOT USE THIS ANYWHERE EXCEPT FOR TESTING
+        DataShell shell = (DataShell)_context.tenant().dataShellFor(spacemodel);
+        shell.commitTo(spacemodel, objects, origs);
     }
 
     public void commitToSpace(String spacemodel, DSpaceObject[] objects)
@@ -188,6 +245,12 @@ public class RuntimeShell implements SmartShell, TenantConstants
     public void enabledFlowClazzez(Object model, Class[] clazzez)
         throws CtxException
     {
+        enabledFlowClazzez(model, clazzez, true);
+    }
+
+    public void enabledFlowClazzez(Object model, Class[] clazzez, boolean lookup)
+        throws CtxException
+    {
         for (int i = 0; i < clazzez.length; i++)
         {
             if (FlowService.isData(clazzez[i]))
@@ -200,8 +263,22 @@ public class RuntimeShell implements SmartShell, TenantConstants
         Object admin = new FlowAdmin(flow);
         if (admin instanceof DSpaceObject) //will only do if it has been stereotyped?
         {
-            //System.out.println("Creating flow for: " + flow + ":" + ((DSpaceObject)admin).smart___objectGroup());
-            commitToSpace(flow, new DSpaceObject[] { (DSpaceObject)admin });
+            Object exist = null;
+            //if (lookup)
+            {
+                threads().addToContextLocals(SYSTEM_RUNTIME, "enableFlowService");
+                exist = lookupFor(m.name(), FlowAdmin.class.getSimpleName(), flow);
+                System.out.println("Creating flow for: " + flow + ":" + ((DSpaceObject)admin).smart___objectGroup() + ":" + exist + ":" + ((DSpaceObject)admin).smart___isNew());
+                if (exist == null)
+                {
+                    ((DSpaceObject)admin).smart___setIsNew(true);
+                }
+                else
+                {
+                    ((DSpaceObject)admin).smart___setIsNew(false);
+                }
+            }
+            commitToSpace(flow, new DSpaceObject[] { (DSpaceObject)admin }, new DSpaceObject[] { (DSpaceObject)exist });
         }
     }
 
@@ -247,6 +324,26 @@ public class RuntimeShell implements SmartShell, TenantConstants
     {
         CrossLinkSmartTenant tenant = CrossLinkSmartTenant.currentTenant();
         return (RuntimeShell)tenant.runtimeShell();
+    }
+
+    public List getListings(String spacemodel, String group, String sortBy,
+            int listingsPerPage, int pageNum)
+        throws CtxException
+    {
+        DataShell shell = (DataShell)_context.tenant().dataShellFor(spacemodel);
+        return shell.getListings(spacemodel, group, sortBy, listingsPerPage, pageNum);
+    }
+
+    public void scheduleTask(ScheduleTask task)
+        throws CtxException
+    {
+        _scheduler.schedule(task);
+    }
+
+    public void unscheduleTask(ScheduleTask task)
+        throws CtxException
+    {
+        _scheduler.unschedule(task);
     }
 }
 

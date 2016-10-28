@@ -41,6 +41,7 @@
 
 package org.anon.smart.deployment;
 
+import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -120,10 +121,40 @@ public class SuiteAssistant<T extends Deployment>
         return clazzFor(dep, key, atype, ldr);
     }
 
-    public Artefact[] enableFor(LicensedDeploymentSuite<T> ldeploy, String dep, String[] features)
+    public Class clazzFor(String dep, String clsname)
         throws CtxException
     {
-        return _suite.enableFor(ldeploy, dep, features);
+        Deployment d = deploymentFor(dep);
+        MicroArtefacts marts = _suite.artefacts(dep);
+        if (marts != null)
+        {
+            Artefact[] artefacts = marts.artefactsForClazz(clsname);
+            if ((artefacts != null) && (artefacts.length > 0))
+                return artefacts[0].getClazz();
+        }
+        return null;
+
+    }
+
+    public String[] linkFor(String dep, Class cls, String part)
+        throws CtxException
+    {
+        Deployment d = deploymentFor(dep);
+        MicroArtefacts marts = _suite.artefacts(dep);
+        if (marts != null)
+        {
+            String clsname = cls.getName();
+            Artefact[] artefacts = marts.artefactsForClazz(clsname);
+            if ((artefacts != null) && (artefacts.length > 0))
+                return artefacts[0].expandLinks(part);
+        }
+        return null;
+    }
+
+    public Artefact[] enableFor(LicensedDeploymentSuite<T> ldeploy, String dep, String[] features, Map<String, List<String>> links)
+        throws CtxException
+    {
+        return _suite.enableFor(ldeploy, dep, features, links);
     }
 
     public List<String> allDeployments()

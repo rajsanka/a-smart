@@ -94,7 +94,7 @@ public abstract class AbstractStoreTransaction implements StoreTransaction
         return null;
     }
 
-    public StoreRecord addRecord(String group, Object primarykey, Object curr, Object orig)
+    public StoreRecord addRecord(String group, Object primarykey, Object curr, Object orig, boolean isnew)
         throws CtxException
     {
         Map<Object, StoreRecord> grp = _recordsInTxn.get(group);
@@ -103,13 +103,13 @@ public abstract class AbstractStoreTransaction implements StoreTransaction
 
         StoreRecord rec = grp.get(primarykey);
         if (rec == null)
-            rec = createNewRecord(group, primarykey, curr, orig);
+            rec = createNewRecord(group, primarykey, curr, orig, isnew);
         grp.put(primarykey, rec);
         _recordsInTxn.put(group, grp);
         return rec;
     }
     
-    public abstract StoreRecord addRecord(String group, Object primarykey, Object curr, Object orig, Object relatedKey)
+    public abstract StoreRecord addRecord(String group, Object primarykey, Object curr, Object orig, Object relatedKey, boolean isnew)
             throws CtxException;
 
     //by default wait.
@@ -118,7 +118,7 @@ public abstract class AbstractStoreTransaction implements StoreTransaction
         return true;
     }
 
-    protected abstract StoreRecord createNewRecord(String group, Object primarykey, Object curr, Object orig)
+    protected abstract StoreRecord createNewRecord(String group, Object primarykey, Object curr, Object orig, boolean isNew)
         throws CtxException;
 }
 

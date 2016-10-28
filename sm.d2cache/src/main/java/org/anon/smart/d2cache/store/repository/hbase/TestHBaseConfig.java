@@ -14,6 +14,7 @@ public class TestHBaseConfig implements HBaseConfig {
 		_local = local;
 				
 	}
+
 	@Override
 	public String zookeeperQuorum() {
 		return _zoo;

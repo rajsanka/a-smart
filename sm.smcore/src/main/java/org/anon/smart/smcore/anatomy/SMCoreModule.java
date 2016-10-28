@@ -42,6 +42,7 @@
 package org.anon.smart.smcore.anatomy;
 
 import java.util.Map;
+import java.util.List;
 import java.util.HashMap;
 
 import org.anon.smart.base.flow.FlowService;
@@ -56,9 +57,15 @@ import org.anon.smart.channels.shell.ExternalConfig;
 import org.anon.smart.smcore.stt.STTService;
 import org.anon.smart.smcore.transition.TransitionService;
 import org.anon.smart.deployment.MacroDeployer;
+import org.anon.smart.smcore.transition.plugin.PluginManager;
+import org.anon.smart.smcore.timer.TimerPlugin;
+import org.anon.smart.smcore.application.ApplicationService;
+import org.anon.smart.d2cache.store.repository.datasource.metadata.DefaultMetadata;
 
 import static org.anon.smart.base.utils.AnnotationUtils.*;
+import static org.anon.smart.base.dspace.DSpaceService.*;
 
+import org.anon.utilities.objservices.ObjectServiceLocator;
 import org.anon.utilities.anatomy.AModule;
 import org.anon.utilities.anatomy.ModuleContext;
 import org.anon.utilities.anatomy.StartConfig;
@@ -77,9 +84,11 @@ public class SMCoreModule extends AModule implements FlowConstants
     protected void setup()
         throws CtxException
     {
+        DefaultMetadata.FINDER = new SMCoreDSParameterFinder();
         FlowService.initialize();
         STTService.initialize();
         TransitionService.initialize();
+        PluginManager.registerPlugin(new TimerPlugin());
     }
 
     public Repeatable repeatMe(RepeaterVariants vars)
@@ -102,6 +111,7 @@ public class SMCoreModule extends AModule implements FlowConstants
             shell.addChannel(channels[i]);
 
         shell.startAllChannels();
+        ApplicationService.initialize();
 
         if (ccfg.firstJVM())
         {
@@ -113,14 +123,27 @@ public class SMCoreModule extends AModule implements FlowConstants
             SmartTenant powner = TenantsHosted.platformOwner();
             //enable before committing, else the space will not be present
             for (String flow : features.keySet())
-                powner.deploymentShell().enableForMe(flow, features.get(flow), new HashMap<String, String>());
+                powner.deploymentShell().enableForMe(flow, features.get(flow), new HashMap<String, List<String>>(), true, true);
             TenantAdmin tadmin = new TenantAdmin(powner.getName(), powner);
             powner.setAdmin(tadmin);
             Object admin = powner.getAdmin();
             String flow = flowFor(admin.getClass());
             RuntimeShell rshell = (RuntimeShell)powner.runtimeShell();
-            rshell.commitToSpace(flow, new DSpaceObject[] { (DSpaceObject)admin });
+            Object exist = rshell.lookupFor(flow, TenantAdmin.class.getSimpleName(), powner.getName());
+            System.out.println("Got tenantadmin for SmartOwner: " + exist);
+            if (exist == null)
+            {
+                ((DSpaceObject)admin).smart___setIsNew(true);
+            }
+            else
+            {
+                ((DSpaceObject)admin).smart___setIsNew(false);
+            }
+            rshell.commitToSpace(flow, new DSpaceObject[] { (DSpaceObject)admin }, new DSpaceObject[] { (DSpaceObject)exist });
         }
+
+        //MacroDeployer.setConfigDir(cfg.configDir());
+        //MacroDeployer.deployPersistedJars();
     }
 
     public void stop()
@@ -132,5 +155,17 @@ public class SMCoreModule extends AModule implements FlowConstants
 
         TenantsHosted.cleanup();
     }
+
+    public void cleanup()
+        throws CtxException
+    {
+        System.out.println("Cleaning up SMCORE.");
+        TransitionService.cleanup();
+        SMCoreContext ctx = (SMCoreContext)context();
+        ctx.cleanup();
+        PluginManager.releasePlugins();
+        ObjectServiceLocator.releaseAll();
+    }
+
 }
 

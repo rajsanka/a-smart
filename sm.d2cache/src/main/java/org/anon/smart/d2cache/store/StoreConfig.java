@@ -45,5 +45,6 @@ import org.anon.utilities.exception.CtxException;
 
 public interface StoreConfig
 {
+    //public boolean useRDB();
 }
 

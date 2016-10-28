@@ -84,8 +84,7 @@ public class FlowSoaGenerator extends SoaGenerator implements Serializable {
 		List<KeysAttributes> key = new ArrayList();
 		for (AttributeDefinition attr : attributes) {
 			if (attr.getIskey()) {
-				KeysAttributes keys = new KeysAttributes(soaString,
-						attr.getAttributeName());
+				KeysAttributes keys = new KeysAttributes(soaString, makeMixedCase(attr.getAttributeName()));
 				key.add(keys);
 			}
 		}
@@ -101,5 +100,14 @@ public class FlowSoaGenerator extends SoaGenerator implements Serializable {
 		// TODO Auto-generated method stub
 		return "success";
 	}
+	
+	 private static String makeMixedCase(String name)
+	    {
+	        StringBuffer sb = new StringBuffer();
+	        char ch = name.charAt(0);
+	        sb.append(Character.toLowerCase(ch));
+	        sb.append(name.substring(1));
+	        return sb.toString();
+	    }
 
 }

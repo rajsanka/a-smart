@@ -37,6 +37,6 @@ $(document).ready(function() {
     });
 
     $("#ok").click(function() {
-        window.location = "http://localhost/localcopy/smartwizard/index.html?c=" + qs["c"];
+        window.location = "http://localhost/smartwizard/localcopy/index.html?c=" + qs["c"];
     });
 });

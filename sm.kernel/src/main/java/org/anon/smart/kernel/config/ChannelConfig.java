@@ -53,6 +53,9 @@ public class ChannelConfig implements VerifiableObject, java.io.Serializable
     private String ports;
     private String protocol;
     private String type;
+    private String translator;
+    private String configurator;
+    private String params;
 
     public boolean _isVerified;
 
@@ -78,6 +81,21 @@ public class ChannelConfig implements VerifiableObject, java.io.Serializable
         if (type == null)
             type = "event";
         return type;
+    }
+
+    public String getTranslator()
+    {
+        return translator;
+    }
+
+    public String getConfigurator()
+    {
+        return configurator;
+    }
+
+    public String getParams()
+    {
+        return params;
     }
 
     public boolean isVerified() { return _isVerified; }

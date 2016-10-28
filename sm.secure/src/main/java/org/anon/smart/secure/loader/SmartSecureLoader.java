@@ -47,12 +47,14 @@ import java.security.CodeSigner;
 import java.security.Permissions;
 import java.security.PermissionCollection;
 import java.security.ProtectionDomain;
+import java.security.AllPermission;
 
 import org.anon.smart.base.loader.SmartLoader;
 import org.anon.smart.base.loader.LoaderVars;
 import org.anon.smart.base.flow.FlowConstants;
 import org.anon.smart.secure.stt.Constants;
 import org.anon.smart.secure.sdomain.CrossLinkKlassProtector;
+import org.anon.smart.secure.sdomain.KlassProtector;
 
 import static org.anon.utilities.services.ServiceLocator.*;
 
@@ -81,7 +83,8 @@ public class SmartSecureLoader extends SmartLoader
                     "org/anon/smart/secure/test/SecureServerRunner",
                     "org/jboss/netty",
                     "org/apache/jcs",
-                    "org/apache/hadoop"
+                    "org/apache/hadoop",
+                    "java/"
                 };
 
     private static final String[] _specificInclude = 
@@ -160,7 +163,13 @@ public class SmartSecureLoader extends SmartLoader
             return null;
 
         if (passthrough(url))
-            return null;
+        {
+            //return a default all permission protection domain
+            Permissions perms = new Permissions();
+            perms.add(new AllPermission());
+            ProtectionDomain domain = new ProtectionDomain(new CodeSource(url, new CodeSigner[0]), perms);
+            return domain;
+        }
 
         try
         {
@@ -180,9 +189,12 @@ public class SmartSecureLoader extends SmartLoader
     protected void initializeDomain(ProtectionDomain domain, Class cls)
         throws CtxException
     {
-        CrossLinkKlassProtector protect = new CrossLinkKlassProtector(domain);
-        if (protect.isAssignable())
-            protect.protectKlass(cls);
+        if ((domain != null) && (domain.getClass() != null) && (domain.getClass().getName().equals(KlassProtector.class.getName())))
+        {
+            CrossLinkKlassProtector protect = new CrossLinkKlassProtector(domain);
+            if (protect.isAssignable())
+                protect.protectKlass(cls);
+        }
     }
 
     /* instead of this, we do from the basetl. We add an extra basetl

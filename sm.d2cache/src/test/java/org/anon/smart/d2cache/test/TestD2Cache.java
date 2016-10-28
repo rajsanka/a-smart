@@ -69,7 +69,7 @@ public class TestD2Cache {
 	{
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
 		D2Cache cache = D2CacheScheme.getCache(scheme.mem, name, flags, config);
 	
 		SimpleTestObject obj = new SimpleTestObject();
@@ -84,14 +84,15 @@ public class TestD2Cache {
 		System.out.println("Read from Mem Only Cache:"+fromCache);
 		
 	}
+
 	
 	//@Test
 	public void testMemIndexCache() throws Exception{
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
         String home = System.getenv("HOME");
-		config.createIndexConfig(home + "/solr/solr-datastore/");
+		config.createIndexConfig(home + "/solr-datastore/");
 		D2Cache cache = D2CacheScheme.getCache(scheme.memind, name, flags, config);
 		
 		Object obj = new SimpleTestObject();
@@ -109,7 +110,7 @@ public class TestD2Cache {
 		QueryObject qo = new QueryObject();
 		qo.addCondition("_string", "SimpleTestObject");
 		qo.setResultType(SimpleTestObject.class);
-		List<Object> resultSet = reader.search("SimpleTestObject", qo);
+		List<Object> resultSet = reader.search("SimpleTestObject", qo, -1, -1, -1, null, true);
 		assertTrue(resultSet.size()>0);
 		for(Object o : resultSet)
 		{
@@ -120,12 +121,12 @@ public class TestD2Cache {
 	}
 	
 	//@Test
-	public void testMemIndexCacheWithComplexObject() throws CtxException {
+	public void testMemIndexCacheWithComplexObject() throws Exception {
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
         String home = System.getenv("HOME");
-		config.createIndexConfig(home + "/solr/solr-datastore/");
+		config.createIndexConfig(home + "/solr-datastore/");
 		D2Cache cache = D2CacheScheme.getCache(scheme.memind, name, flags, config);
 		
 		Object obj = new ComplexTestObject();
@@ -143,7 +144,7 @@ public class TestD2Cache {
 		QueryObject qo = new QueryObject();
 		qo.addCondition("id", "compObject");
 		qo.setResultType(ComplexTestObject.class);
-		List<Object> resultSet = reader.search("ComplexTestObject", qo);
+		List<Object> resultSet = reader.search("ComplexTestObject", qo, -1, -1, -1, null, true);
 		assertTrue(resultSet.size()>0);
 		for(Object o : resultSet)
 		{
@@ -157,9 +158,9 @@ public class TestD2Cache {
 	public void testMemStoreIndexCache() throws CtxException {
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
         String home = System.getenv("HOME");
-		config.createIndexConfig(home + "/solr/solr-datastore/");
+		config.createIndexConfig(home + "/solr-datastore/");
 		config.createStoreConfig("hadoop", "2181", "hadoop:60000", false);
 		D2Cache cache = D2CacheScheme.getCache(scheme.memstoreind, name, flags, config);
 		
@@ -177,12 +178,12 @@ public class TestD2Cache {
 	}
 	
 	//@Test
-	public void testMemStoreIndexCacheWithComplexObject() throws CtxException {
+	public void testMemStoreIndexCacheWithComplexObject() throws Exception {
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
         String home = System.getenv("HOME");
-		config.createIndexConfig(home + "/solr/solr-datastore/");
+		config.createIndexConfig(home + "/solr-datastore/");
 		config.createStoreConfig("hadoop", "2181", "hadoop:60000", false);
 		D2Cache cache = D2CacheScheme.getCache(scheme.memstoreind, name, flags, config);
 		
@@ -199,14 +200,75 @@ public class TestD2Cache {
 		System.out.println("Read from Mem Store Ind Cache:"+fromCache);
 		
 	}
+
+    @Test
+    public void testMySQLCache()
+        throws Exception
+    {
+        int flags = D2CacheScheme.BROWSABLE_CACHE;
+        String name = "TestCache";
+        D2CacheConfig config = new BasicD2CacheConfig(true);
+        String home = System.getenv("HOME");
+		config.createIndexConfig(home + "/solr-datastore/");
+        config.createMySQLConfig();
+		D2Cache cache = D2CacheScheme.getCache(scheme.memmysqlind, name, flags, config);
+
+
+        Object obj = new org.anon.smart.d2cache.store.repository.datasource.SimplePersistableData(90000);
+        String[] keys = new String[] { "key190000" };
+        TestCacheUtil.setTestData(cache, obj, keys, "SimplePersistableData");
+
+		D2Cache cacherdr = D2CacheScheme.getCache(scheme.storemysql, name, flags, config);
+		Reader reader = cacherdr.myReader();
+		Object fromCache = reader.lookup("SimplePersistableData", "key190000");
+		
+		//assertTrue(fromCache != null);
+		//assertTrue(fromCache instanceof org.anon.smart.d2cache.store.repository.datasource.SimplePersistableData);
+        System.out.println("Simple From cache: " + fromCache);
+
+
+        obj = new org.anon.smart.d2cache.store.repository.datasource.ComplexPersistableData(90000);
+        Integer[] ikeys = new Integer[] { 90010 };
+        TestCacheUtil.setTestData(cache, obj, ikeys, "ComplexPersistableData");
+
+		reader = cacherdr.myReader();
+		fromCache = reader.lookup("ComplexPersistableData", 90010);
+        System.out.println("Complex From cache: " + fromCache);
+		assertTrue(fromCache != null);
+
+        /* testing simple first
+        //Till I change it to be automatic
+        org.anon.smart.d2cache.store.repository.datasource.TestPersistable persist = new org.anon.smart.d2cache.store.repository.datasource.TestPersistable();
+        persist.setupMetadata();
+        */
+
+		QueryObject qo = new QueryObject();
+		qo.addCondition("complexData", "complex*");
+		qo.setResultType(org.anon.smart.d2cache.store.repository.datasource.ComplexPersistableData.class);
+		List<Object> resultSet = reader.search("ComplexPersistableData", qo, -1, -1, -1, null, true);
+
+        assertTrue(resultSet != null);
+        assertTrue(resultSet.size() > 0);
+        System.out.println(resultSet);
+
+		resultSet = reader.search("ComplexPersistableData", qo, 5, -1, -1, "complexData", true);
+        assertTrue(resultSet != null);
+        //assertTrue(resultSet.size() == 5);
+        System.out.println(resultSet);
+
+		resultSet = reader.search("ComplexPersistableData", qo, 5, 3, 5, "complexData", true);
+        assertTrue(resultSet != null);
+        //assertTrue(resultSet.size() == 1);
+        System.out.println(resultSet);
+    }
 	
 	//@Test
 	public void testMemStoreIndexCacheWithMyComplexObject() throws CtxException {
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
         String home = System.getenv("HOME");
-		config.createIndexConfig(home + "/solr/solr-datastore/");
+		config.createIndexConfig(home + "/solr-datastore/");
 		config.createStoreConfig("hadoop", "2181", "hadoop:60000", false);
 		D2Cache cache = D2CacheScheme.getCache(scheme.memstoreind, name, flags, config);
 		
@@ -228,9 +290,9 @@ public class TestD2Cache {
 	public void testMemStoreIndexCachePersistence() throws CtxException {
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
         String home = System.getenv("HOME");
-		config.createIndexConfig(home + "/solr/solr-datastore/");
+		config.createIndexConfig(home + "/solr-datastore/");
 		config.createStoreConfig("hadoop", "2181", "hadoop:60000", false);
 		D2Cache cache = D2CacheScheme.getCache(scheme.memstoreind, name, flags, config);
 		
@@ -250,9 +312,9 @@ public class TestD2Cache {
 			throws CtxException {
 		int flags = D2CacheScheme.BROWSABLE_CACHE;
 		String name = "TestCache";
-		D2CacheConfig config = new BasicD2CacheConfig();
+		D2CacheConfig config = new BasicD2CacheConfig(false);
         String home = System.getenv("HOME");
-		config.createIndexConfig(home + "/solr/solr-datastore/");
+		config.createIndexConfig(home + "/solr-datastore/");
 		config.createStoreConfig("hadoop", "2181", "hadoop:60000", false);
 		D2Cache cache = D2CacheScheme.getCache(scheme.memstoreind, name, flags, config);
 

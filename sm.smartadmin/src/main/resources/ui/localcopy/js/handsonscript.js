@@ -62,13 +62,15 @@ $(document).ready(function() {
                 formobj.queryMap = {};
                 formobj.queryMap[mapname] = mapvalue;
 
+                /*
                 for (var i in metaData) {
-                    if (metaData[i].attributeType == "java.lang.Integer") {
-                        if (mapname == metaData[i].attributeName) {
-                            formobj.queryMap[mapname] = parseInt(formobj.queryMap[mapname]);
-                        }
-                    }
+                if (metaData[i].attributeType == "java.lang.Integer") {
+                if (mapname == metaData[i].attributeName) {
+                formobj.queryMap[mapname] = parseInt(formobj.queryMap[mapname]);
                 }
+                }
+                }*/
+
                 //smart call
                 smart.search(formobj, function(data) {
                     console.log("search-->" + JSON.stringify(data));
@@ -80,7 +82,7 @@ $(document).ready(function() {
             case "lookupform":
                 for (var i in metaData) {
                     if (metaData[i].isKey == true) {
-                        if ("java.lang.Integer" == metaData[i].attributeType) {
+                        if ("java.lang.Integer" == metaData[i].attributeType || "int" == metaData[i].attributeType || "long" == metaData[i].attributeType) {
                             formobj.key = parseInt(formobj.key);
                         }
                     }
@@ -191,7 +193,6 @@ function clearSteps() {
     $("#lookupform,#addform,#updateform,#searchform,#listallform").empty();
 }
 
-
 //structure createprime and update prime form
 function addandUpdateform(dataobj) {
     var obj1 = dataobj;
@@ -277,8 +278,8 @@ function filterAndProcess(data) {
             formdata.html[i] = {};
             formdata.html[i]["id"] = resultData[i].attributeName;
             formdata.html[i]["name"] = "data." + resultData[i].attributeName;
-            formdata.html[i]["caption"] = formdata.html[i].id.toUpperCase();
-            if (resultData[i].attributeType == "java.lang.String" || resultData[i].attributeType == "java.lang.Integer") {
+            formdata.html[i]["caption"] = formdata.html[i].id.toProperCase();
+            if (resultData[i].attributeType == "java.lang.String" || resultData[i].attributeType == "java.lang.Integer" || resultData[i].attributeType == "int" || resultData[i].attributeType == "long") {
                 formdata.html[i]["type"] = "text";
             }
             if (resultData[i].isKey == true) {
@@ -324,7 +325,7 @@ function metadatasuccess(data) {
 function typeCast(obj, orgObj) {
     for (var i in orgObj) {
         if (!(orgObj[i].attributeName.startsWith("H"))) {
-            if (orgObj[i].attributeType == "java.lang.Integer") {
+            if (orgObj[i].attributeType == "java.lang.Integer" || "int" == orgObj[i].attributeType || "long" == orgObj[i].attributeType) {
                 obj.data[orgObj[i].attributeName] = parseInt(obj.data[orgObj[i].attributeName]);
             }
         }
