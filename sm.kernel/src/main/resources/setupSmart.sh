@@ -135,9 +135,11 @@ wget_url http://repo1.maven.org/maven2/javax/servlet/servlet-api/2.3/servlet-api
 wget_url http://repo1.maven.org/maven2/velocity/velocity/1.5/velocity-1.5.jar lib/velocity/velocity/1.5/velocity-1.5.jar
 wget_url http://repo1.maven.org/maven2/logkit/logkit/1.0.1/logkit-1.0.1.jar lib/logkit/logkit/1.0.1/logkit-1.0.1.jar
 wget_url http://repo1.maven.org/maven2/javax/mail/mail/1.4/mail-1.4.jar lib/javax/mail/mail/1.4/mail-1.4.jar
-wget_url http://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.39/mysql-connector-java-5.1.39.jar
-wget_url http://repo1.maven.org/maven2/commons-dbutils/commons-dbutils/1.6/commons-dbutils-1.6.jar
-wget_url http://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar
+
+echo "[Copying mysql jars **************************************************************]"
+wget_url http://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.39/mysql-connector-java-5.1.39.jar lib/mysql/mysql-connector-java/5.1.39/mysql-connector-java-5.1.39.jar
+wget_url http://repo1.maven.org/maven2/commons-dbutils/commons-dbutils/1.6/commons-dbutils-1.6.jar lib/commons-dbutils/commons-dbutils/1.6/commons-dbutils-1.6.jar
+wget_url http://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar lib/com/google/code/gson/gson/2.7/gson-2.7.jar
 
 
 
