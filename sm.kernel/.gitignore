@@ -1,0 +1,8 @@
+/.classpath
+/.project
+/.settings/
+/target/
+/logs/
+/src/main/resources/logs/
+/src/main/resources/nohup.out
+/src/main/resources/smartkernel.pid

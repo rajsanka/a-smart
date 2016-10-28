@@ -1,0 +1,26 @@
+name:       TransitionServices
+type:       Transition
+flow:       AllFlows
+foreach:    FlowAdmin|Any
+services:
+    - name:     changeState
+      method:   changeState
+    - name:     changeObjectListState
+      method:   changeObjectListState
+    - name:     changeObjectState
+      method:   changeObjectState
+    - name:     sendEmailService
+      method:   sendEmailService
+    - name:     sendWithAttachment
+      method:   sendWithAttachment
+    - name:     sendSMS
+      method:   sendSMS
+    - name:     assertAllObjectInState
+      method:   assertAllObjectInState
+    - name:     assertNoObjectInState
+      method:   assertNoObjectInState
+    - name:     assertObjectNotState
+      method:   assertObjectNotState
+    - name:     assertObjectState
+      method:   assertObjectState
+

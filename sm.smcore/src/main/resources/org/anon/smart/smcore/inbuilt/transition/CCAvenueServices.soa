@@ -1,0 +1,19 @@
+name:       CCAvenueServices
+type:       Transition
+flow:       AllFlows
+foreach:    FlowAdmin|Any,FlowAdmin|CCAvenueResponse,FlowAdmin|CCAvenueCancel
+actions:
+    - name:      handleResponse
+      method:    handleResponse
+      foreach:   FlowAdmin|CCAvenueResponse
+      from:      active
+      to:        active
+    - name:      handleCancel
+      method:    handleCancel
+      foreach:   FlowAdmin|CCAvenueCancel
+      from:      active
+      to:        active
+services:
+    - name:     initiateTransaction
+      method:   initiateTransaction
+
