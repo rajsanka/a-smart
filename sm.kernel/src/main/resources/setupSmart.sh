@@ -88,7 +88,7 @@ wget_url http://repo1.maven.org/maven2/org/springframework/spring-core/3.0.5.REL
 wget_url http://repo1.maven.org/maven2/org/springframework/spring-asm/3.0.5.RELEASE/spring-asm-3.0.5.RELEASE.jar lib/org/springframework/spring-asm/3.0.5.RELEASE/spring-asm-3.0.5.RELEASE.jar
 wget_url http://repo1.maven.org/maven2/commons-logging/commons-logging/1.1/commons-logging-1.1.jar lib/commons-logging/commons-logging/1.1/commons-logging-1.1.jar
 wget_url http://repo1.maven.org/maven2/commons-codec/commons-codec/1.4/commons-codec-1.4.jar lib/commons-codec/commons-codec/1.4/commons-codec-1.4.jar
-wget_url http://repo1.maven.org/maven2/net/sf/json-lib/json-lib/2.4/json-lib-2.4-jdk15.jar lib/net/sf/json-lib/json-lib/2.4/json-lib-2.4.jar lib/
+wget_url http://repo1.maven.org/maven2/net/sf/json-lib/json-lib/2.4/json-lib-2.4-jdk15.jar lib/net/sf/json-lib/json-lib/2.4/json-lib-2.4-jdk15.jar
 wget_url http://repo1.maven.org/maven2/commons-lang/commons-lang/2.5/commons-lang-2.5.jar lib/commons-lang/commons-lang/2.5/commons-lang-2.5.jar
 wget_url http://repo1.maven.org/maven2/net/sf/ezmorph/ezmorph/1.0.6/ezmorph-1.0.6.jar lib/net/sf/ezmorph/ezmorph/1.0.6/ezmorph-1.0.6.jar
 wget_url http://repo1.maven.org/maven2/commons-collections/commons-collections/3.2/commons-collections-3.2.jar lib/commons-collections/commons-collections/3.2/commons-collections-3.2.jar
