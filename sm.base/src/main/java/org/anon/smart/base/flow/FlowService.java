@@ -52,6 +52,7 @@ import org.anon.smart.base.annot.TransitionAnnotate;
 import org.anon.smart.base.annot.ResponseAnnotate;
 import org.anon.smart.base.annot.MessageAnnotate;
 import org.anon.smart.base.annot.ConfigAnnotate;
+import org.anon.smart.base.annot.SeriesAnnotate;
 
 import static org.anon.utilities.services.ServiceLocator.*;
 
@@ -69,6 +70,7 @@ public class FlowService implements FlowConstants
         ArtefactType.registerArtefactType(RESPONSE, responseRecognizer(), "name", "name");
         ArtefactType.registerArtefactType(MESSAGE, messageRecognizer(), "name", "name");
         ArtefactType.registerArtefactType(CONFIG, configRecognizer(), "name", "name");
+        ArtefactType.registerArtefactType(SERIES, seriesRecognizer(), "name", "name");
 
         MacroDeployer.registerDeploymentClazz(FLOW, FlowDeployment.class, FlowDeploymentSuite.class);
     }
@@ -112,6 +114,11 @@ public class FlowService implements FlowConstants
         return ConfigAnnotate.class;
     }
 
+    public static Class<? extends Annotation> seriesRecognizer()
+    {
+        return SeriesAnnotate.class;
+    }
+
     public static boolean isSmartData(ArtefactType type)
     {
         return type.isType(SmartDataAnnotate.class);
@@ -130,6 +137,11 @@ public class FlowService implements FlowConstants
     public static boolean isConfig(ArtefactType type)
     {
         return type.isType(ConfigAnnotate.class);
+    }
+
+    public static boolean isSeries(ArtefactType type)
+    {
+        return type.isType(SeriesAnnotate.class);
     }
 
     public static boolean isData(Class clazz)

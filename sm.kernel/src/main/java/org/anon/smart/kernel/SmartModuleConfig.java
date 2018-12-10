@@ -45,10 +45,13 @@ import java.util.List;
 import java.util.ArrayList;
 
 import org.anon.smart.channels.shell.ExternalConfig;
+import org.anon.smart.d2cache.D2CacheConfig;
+import org.anon.smart.d2cache.BasicD2CacheConfig;
 import org.anon.smart.channels.shell.SCShell;
 import org.anon.smart.smcore.anatomy.SMCoreConfig;
 import org.anon.smart.kernel.config.SmartConfig;
 import org.anon.smart.kernel.config.ChannelConfig;
+import org.anon.smart.kernel.config.RepositoryConfig;
 import org.anon.smart.monitor.anatomy.MonitorStartConfig;
 import org.anon.smart.smcore.channel.server.EventServerConfig;
 import org.anon.smart.smcore.channel.server.CustomServerConfig;
@@ -66,6 +69,7 @@ public class SmartModuleConfig implements SMCoreConfig, SecureConfig, MonitorSta
     private ExternalConfig[] _channels;
     private String _configDir;
     private boolean _master;
+    private D2CacheConfig _config;
 
     public SmartModuleConfig(SmartConfig cfg, boolean master)
         throws CtxException
@@ -81,6 +85,9 @@ public class SmartModuleConfig implements SMCoreConfig, SecureConfig, MonitorSta
                 lst.add(ccfg);
         }
         _channels = lst.toArray(new ExternalConfig[0]);
+
+        RepositoryConfig rcfg = cfg.getRepository();
+        _config = new BasicD2CacheConfig(null, rcfg.getServer(), rcfg.getPort(), rcfg.getUser(), rcfg.getPassword(), rcfg.getDatabase());
     }
 
     private ExternalConfig createChannel(ChannelConfig cfg)
@@ -126,6 +133,10 @@ public class SmartModuleConfig implements SMCoreConfig, SecureConfig, MonitorSta
         throws CtxException
     {
         return _configDir;
+    }
+
+    public D2CacheConfig repository() throws CtxException {
+        return _config;
     }
 }
 

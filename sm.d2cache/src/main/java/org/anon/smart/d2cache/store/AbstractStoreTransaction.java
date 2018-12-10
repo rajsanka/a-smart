@@ -118,6 +118,12 @@ public abstract class AbstractStoreTransaction implements StoreTransaction
         return true;
     }
 
+    public void simulate()
+        throws CtxException
+    {
+        //by default do nothing. Override for behavior
+    }
+
     protected abstract StoreRecord createNewRecord(String group, Object primarykey, Object curr, Object orig, boolean isNew)
         throws CtxException;
 }

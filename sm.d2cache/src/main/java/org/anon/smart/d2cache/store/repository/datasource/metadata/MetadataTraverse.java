@@ -58,6 +58,7 @@ import org.anon.smart.d2cache.annot.PrimeKeyAnnotate;
 import org.anon.smart.d2cache.annot.CacheKeyAnnotate;
 import org.anon.smart.d2cache.store.repository.datasource.DataMetadata;
 import org.anon.smart.d2cache.store.repository.datasource.PersistableData;
+import org.anon.smart.d2cache.store.repository.datasource.AttributeMetadata;
 
 import org.anon.utilities.reflect.CVisitor;
 import org.anon.utilities.reflect.DataContext;
@@ -87,10 +88,10 @@ public class MetadataTraverse implements CVisitor
         TYPESMAP.put(Integer.class, "INTEGER");
         TYPESMAP.put(long.class, "BIGINT");
         TYPESMAP.put(Long.class, "BIGINT");
-        TYPESMAP.put(double.class, "DOUBLE(5, 2)");
-        TYPESMAP.put(Double.class, "DOUBLE(5, 2)");
-        TYPESMAP.put(float.class, "FLOAT(5, 2)");
-        TYPESMAP.put(Float.class, "FLOAT(5, 2)");
+        TYPESMAP.put(double.class, "DOUBLE(20, 6)");
+        TYPESMAP.put(Double.class, "DOUBLE(20, 6)");
+        TYPESMAP.put(float.class, "FLOAT(10, 2)");
+        TYPESMAP.put(Float.class, "FLOAT(10, 2)");
         TYPESMAP.put(boolean.class, "BOOLEAN");
         TYPESMAP.put(Boolean.class, "BOOLEAN");
         TYPESMAP.put(short.class, "INTEGER");
@@ -151,8 +152,10 @@ public class MetadataTraverse implements CVisitor
     private Object handleObject(Field fld, Class t, String name, String path)
         throws CtxException
     {
+        //System.out.println("handleObject for attribute: " + name + ":" + t + ":" + type().isAssignable(t, CacheableObject.class));
         if (type().isAssignable(t, CacheableObject.class))
         {
+            //System.out.println("Adding metadata for related: " + name + ":" + t);
             PersistableData.metadataFor(t);
             //assumption is that the keyname used in this is the same name used in the sub object for relation
             //System.out.println("Adding related: " + name + ":" + t);
@@ -184,7 +187,7 @@ public class MetadataTraverse implements CVisitor
         Field fld = ctx.field();
         if (fld != null)
         {
-            //System.out.println("Field: " + fld + ":" + fld.getName() + ":" + ctx.before() + ":" + fld.getType() + ":" + ctx.traversingClazz());
+            //System.out.println("Field: " + fld + ":" + fld.getName() + ":" + ctx.before() + ":" + fld.getType() + ":" + ctx.traversingClazz() + ":" + inProgress);
             int mod = fld.getModifiers();
             String name = fld.getName();
             Class t = fld.getType();
@@ -195,7 +198,7 @@ public class MetadataTraverse implements CVisitor
                     //ensure metadata is present for the class
                     return handleObject(fld, t, name, ctx.fieldpath());
                 }
-                else if (type().isAssignable(t, Collection.class))
+                else if (type().isAssignable(t, Collection.class) || type().isAssignable(t, Map.class))
                 {
                     //it is a collection, then add the relation of the generic type.
                     //assumed it is declared.
@@ -227,7 +230,7 @@ public class MetadataTraverse implements CVisitor
                 {
                     if (hasAnnotation(fld, PrimeKeyAnnotate.class))
                     {
-                        System.out.println("Adding " + fld.getName() + " as key");
+                        //System.out.println("Adding " + fld.getName() + " as key");
                         _metadata.addKey(name, t);
                         _sql += getCreateAttributeFragment(name, t, true, false);
                         _keyName = name;
@@ -258,7 +261,8 @@ public class MetadataTraverse implements CVisitor
         if (!ret)
         {
             Annotation[] annots = fld.getAnnotations();
-            for (int i = 0; (annots != null) && (i < annots.length); i++)
+            //System.out.println("Annotations present on field: " + fld.getName() + ":" + annots);
+            for (int i = 0; (!ret) && (annots != null) && (i < annots.length); i++)
             {
                 Class cls = annots[i].annotationType();
                 ret = cls.isAnnotationPresent(annot);
@@ -272,7 +276,14 @@ public class MetadataTraverse implements CVisitor
     {
         for (String related : _related.keySet())
         {
+            System.out.println("Adding submeta data for: " + related + ":" + _keyName + ":" + _related.get(related));
             _metadata.addAttribute(related, _keyName, _related.get(related), _keyName);
+            AttributeMetadata meta = _metadata.metadataFor(related);
+            if (meta.isBackwardReference())
+            {
+                String attr = getCreateAttributeFragment(meta.columnName(), meta.backReferenceType(), false, false);
+                _sql += attr;
+            }
         }
     }
 
@@ -282,6 +293,7 @@ public class MetadataTraverse implements CVisitor
         setupRelatedAttributes();
         _sql += ")";
         _metadata.setCreateSQL(getExistsSQL(), _sql);
+        inProgress.remove(_currentClass);
     }
 
     public static MetadataTraverse createMetadata(String name, Class<? extends CacheableObject> cls)

@@ -197,6 +197,9 @@ public class Atomicity
                 if (h != null)
                     simulated = simulated && h.simulate(_atomicID);
             }
+            
+            //after individual are done. simulate whole
+            if (simulated) simulated = simulate(simulated);
         }
         catch (Exception e)
         {
@@ -261,6 +264,13 @@ public class Atomicity
         throws CtxException
     {
         //nothing to be done
+    }
+
+    protected boolean simulate(boolean outcome)
+        throws CtxException
+    {
+        //nothing to be done
+        return true;
     }
 }
 

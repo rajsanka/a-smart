@@ -204,10 +204,24 @@ public class DeploymentShell implements SmartShell, FlowConstants
         return deployment(dep, name, CONFIG);
     }
 
+    public Class seriesClass(String dep, String name)
+        throws CtxException
+    {
+        return deployment(dep, name, SERIES);
+    }
+
     public String[] linksFor(String dep, Class cls, String key)
         throws CtxException
     {
         return _licensed.assistant().linkFor(dep, cls, key);
+    }
+
+    public List<String> getWorkspaces(String dep)
+        throws CtxException
+    {
+        FlowDeployment deploy = deploymentFor(dep);
+        assertion().assertNotNull(deploy, "Cannot recognize deployment: " + dep);
+        return deploy.getWorkspaces();
     }
 
     public List<Class> transitionsFor(String dep, String prime, String event, String extra)

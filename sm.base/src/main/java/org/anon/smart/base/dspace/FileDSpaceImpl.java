@@ -51,7 +51,7 @@ import org.anon.utilities.exception.CtxException;
 public class FileDSpaceImpl extends TransactDSpaceImpl {
 
 	public FileDSpaceImpl(String name, String file) throws CtxException {
-		super(name, file);
+		super(name, file, null);
 		//Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
 		// TODO Auto-generated constructor stub
 	}

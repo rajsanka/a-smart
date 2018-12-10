@@ -121,7 +121,7 @@ public class DataSchema implements DSErrorCodes
     public static void createStack(Class cls, Stack<Class> run, Map<Class, Class[]> ret)
         throws CtxException
     {
-        DataMetadata meta = SCHEMA.getMetadata(cls, _globalName, _dbName);
+        DataMetadata meta = SCHEMA.getMetadata(cls, globalName(), dbName());
         Class[] rel = meta.related();
         boolean add = !(ret.containsKey(cls));
         ret.put(cls, rel);

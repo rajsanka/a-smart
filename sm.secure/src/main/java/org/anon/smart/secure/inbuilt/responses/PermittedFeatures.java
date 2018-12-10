@@ -51,6 +51,7 @@ import org.anon.smart.secure.inbuilt.data.SmartRole;
 
 public class PermittedFeatures implements java.io.Serializable
 {
+    private String roleName;
     private Map<String, String> features;
     private boolean allPermitted = false;
 
@@ -63,6 +64,10 @@ public class PermittedFeatures implements java.io.Serializable
     {
         if (role == null)
             return;
+
+        System.out.println(role.getName() + ":" + role.permittedAccess());
+
+        roleName = role.getName();
 
         allPermitted = role.allAllowed();
         List<SmartRole.PermittedAccess> pa = role.permittedAccess();

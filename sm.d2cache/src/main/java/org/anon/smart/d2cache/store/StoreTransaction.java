@@ -56,6 +56,8 @@ public interface StoreTransaction
         throws CtxException;
     public StoreRecord addRecord(String group, Object primarykey, Object curr, Object orig, Object relatedKey, boolean isnew)
             throws CtxException;
+    public void simulate()
+        throws CtxException;
     public void commit()
         throws CtxException;
     public void rollback()

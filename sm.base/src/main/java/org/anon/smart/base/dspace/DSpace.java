@@ -53,10 +53,16 @@ public interface DSpace
 {
     public Reader myReader()
         throws CtxException;
+
     public Reader myReader(boolean inMemory)
             throws CtxException;
+
     public Reader getBrowsableReader()
             throws CtxException;
+
+    public Reader nonCachedReader()
+        throws CtxException;
+
     public D2Cache cacheImpl();
 
     public void cleanup()
@@ -64,5 +70,7 @@ public interface DSpace
     
     public D2Cache fsCacheImpl() 
     		throws CtxException;
+
+    public String name();
 }
 

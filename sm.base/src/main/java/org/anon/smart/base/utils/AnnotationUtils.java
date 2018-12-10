@@ -54,6 +54,7 @@ import org.anon.smart.base.annot.KeyAnnotate;
 import org.anon.smart.base.annot.Synthetic;
 import org.anon.smart.base.annot.StatesAnnotate;
 import org.anon.smart.base.annot.StateAnnotate;
+import org.anon.smart.base.annot.NonCachedAnnotate;
 import org.anon.smart.base.annot.DestinationAnnotate;
 
 import static org.anon.utilities.services.ServiceLocator.*;
@@ -81,6 +82,13 @@ public class AnnotationUtils
         }
 
         return ret;
+    }
+    
+    public static boolean isNonCached(Class cls)
+    {
+        Annotation annot = reflect().getAnyAnnotation(cls, NonCachedAnnotate.class.getName());
+
+        return (annot != null);
     }
 
     public static String objectName(Object data)

@@ -50,12 +50,16 @@ import org.anon.smart.base.dspace.DefaultAuthor;
 import static org.anon.utilities.services.ServiceLocator.*;
 
 import org.anon.utilities.anatomy.JVMEnvironment;
+import org.anon.utilities.anatomy.StartConfig;
 import org.anon.utilities.exception.CtxException;
 
 public class TestContext implements SmartModuleContext
 {
     public TestContext()
     {
+    }
+
+    public void setup(StartConfig cfg) throws CtxException {
     }
 
     public JVMEnvironment vmEnvironment()
@@ -81,7 +85,7 @@ public class TestContext implements SmartModuleContext
     public DSpaceAuthor spaceAuthor()
         throws CtxException
     {
-        return new DefaultAuthor();
+        return new DefaultAuthor(null);
     }
 
     public String[] getEnableFlows()

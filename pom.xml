@@ -58,7 +58,7 @@
     <dependency>
       <groupId>org.anon.utilities</groupId>
       <artifactId>utilities</artifactId>
-      <version>3.2</version>
+      <version>3.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.anon.sampleapp</groupId>
@@ -68,7 +68,7 @@
     <dependency>
       <groupId>org.anon.utilities</groupId>
       <artifactId>utilities</artifactId>
-      <version>3.2</version>
+      <version>3.3-SNAPSHOT</version>
       <scope>test</scope>
       <classifier>tests</classifier>
     </dependency>
@@ -199,5 +199,6 @@
 		<module>sm.template</module>
 		<module>sm.generator</module>
     <module>sm.monitor</module>
+    <module>sm.workbench</module>
   </modules>
 </project>

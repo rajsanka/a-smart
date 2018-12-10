@@ -81,7 +81,9 @@ public class SecureFlowDeployment extends FlowDeployment
         return cls.cast(new SecureFlowDeployment(this, features));
     }
 
-    public List<SecureConfig> getSecurity() { return security; }
+    public List<SecureConfig> getSecurity() { 
+        return security; 
+    }
 
 }
 

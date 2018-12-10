@@ -68,11 +68,13 @@ public class FlowDeployment extends Deployment implements FlowConstants
     private List<String> responses;
     private List<String> messages;
     private List<String> transitions;
+    private List<String> series;
     private List<String> config;
     private List<Key> keys;
     private List<Link> links;
     private List<Link> needlinks;
     private List<String> processedBy;
+    private List<String> workspaces;
 
     private Map<String, String> _classToName;
     private Map<String, String> _nameToClass;
@@ -99,11 +101,13 @@ public class FlowDeployment extends Deployment implements FlowConstants
         messages = new ArrayList<String>();
         transitions = new ArrayList<String>();
         config = new ArrayList<String>();
+        series = new ArrayList<String>();
         keys = new ArrayList<Key>();
         links = new ArrayList<Link>();
         fileStore = "";
         needlinks = new ArrayList<Link>();
         processedBy = new ArrayList<String>();
+        workspaces = new ArrayList<String>();
         _internalData = new ArrayList<String>();
         _classToName = new HashMap<String, String>();
         _nameToClass = new HashMap<String, String>();
@@ -149,9 +153,11 @@ public class FlowDeployment extends Deployment implements FlowConstants
         transitions = new ArrayList<String>();
         keys = new ArrayList<Key>();
         config = new ArrayList<String>();
+        series = new ArrayList<String>();
         links = new ArrayList<Link>();
         needlinks = new ArrayList<Link>();
         processedBy = new ArrayList<String>();
+        workspaces = new ArrayList<String>();
 
         copy(dep.primeData, primeData);
         copy(dep.data, data);
@@ -162,8 +168,10 @@ public class FlowDeployment extends Deployment implements FlowConstants
         copy(dep.keys, keys);
         copy(dep.links, links);
         copy(dep.config, config);
+        copy(dep.series, series);
         copy(dep.needlinks, needlinks);
         copy(dep.processedBy, processedBy);
+        copy(dep.workspaces, workspaces);
 
         for (String p : primeData)
         {
@@ -225,6 +233,7 @@ public class FlowDeployment extends Deployment implements FlowConstants
         _mapTypes.put(FlowService.messageRecognizer(), messages);
         _mapTypes.put(FlowService.transitionRecognizer(), transitions);
         _mapTypes.put(FlowService.configRecognizer(), config);
+        _mapTypes.put(FlowService.seriesRecognizer(), series);
     }
 
     @Override
@@ -238,6 +247,7 @@ public class FlowDeployment extends Deployment implements FlowConstants
         ret = ret || ((messages != null) && messages.contains(clsname));
         ret = ret || ((transitions != null) && transitions.contains(clsname));
         ret = ret || ((config != null) && (config.contains(clsname)));
+        ret = ret || ((series != null) && (series.contains(clsname)));
 
         return ret;
     }
@@ -282,6 +292,9 @@ public class FlowDeployment extends Deployment implements FlowConstants
         if (config != null)
             ret.addAll(config);
 
+        if (series != null)
+            ret.addAll(series);
+
         return ret;
     }
 
@@ -313,6 +326,7 @@ public class FlowDeployment extends Deployment implements FlowConstants
         ret = ret || ((messages != null) && messages.contains(clsname));
         ret = ret || ((transitions != null) && transitions.contains(clsname));
         ret = ret || ((config != null) && config.contains(clsname));
+        ret = ret || ((series != null) && series.contains(clsname));
 
 
         return ret;
@@ -320,7 +334,7 @@ public class FlowDeployment extends Deployment implements FlowConstants
 
     public String getDataType(String clsname)
     {
-        System.out.println("Config is: " + config + ":" + clsname);
+        System.out.println("Config is: " + config + ":" + clsname + ":" + data + ":" + series + ":" + primeData);
         if ((primeData != null) && primeData.contains(clsname))
             return PRIMETYPE;
         else if ((data != null) && data.contains(clsname))
@@ -335,6 +349,8 @@ public class FlowDeployment extends Deployment implements FlowConstants
             return MESSAGETYPE;
         else if ((config != null) && config.contains(clsname))
             return CONFIGTYPE;
+        else if ((series != null) && series.contains(clsname))
+            return SERIESTYPE;
 
         return null;
     }
@@ -363,6 +379,8 @@ public class FlowDeployment extends Deployment implements FlowConstants
             return messages;
         else if (dtype.equals(CONFIGTYPE))
             return config;
+        else if (dtype.equals(SERIESTYPE))
+            return series;
 
         return new ArrayList<String>();
     }
@@ -517,6 +535,11 @@ public class FlowDeployment extends Deployment implements FlowConstants
     public List<String> getProcessedBy()
     {
         return processedBy;
+    }
+
+    public List<String> getWorkspaces()
+    {
+        return workspaces;
     }
 }
 

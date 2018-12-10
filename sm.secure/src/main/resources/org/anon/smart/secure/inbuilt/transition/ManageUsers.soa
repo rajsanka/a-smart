@@ -34,3 +34,5 @@ services:
       method:   setupResetPassword
     - name:     resetPassword
       method:   resetPassword
+    - name:     addUserPreference
+      method:   addUserPreference

@@ -106,6 +106,7 @@ public class BasicD2CacheConfig implements D2CacheConfig {
 
 	@Override
 	public StoreConfig getStoreConfig() {
+        System.out.println("Using SQL Config: " + _mysqlConfig);
         if (_useRDB)
             return _mysqlConfig;
         else

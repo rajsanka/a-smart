@@ -130,9 +130,14 @@ public class DataMetadataImpl implements DataMetadata, DSErrorCodes
 
     private String constructTableName(String gname)
     {
-        String group = DefaultMetadata.getGroupFor(_dataclazz);
-        String tablename = gname + "__" + group;
-        tablename = tablename.replaceAll("\\-", "_");
+        String tablename = DefaultMetadata.getTableNameFor(gname, _dataclazz);
+        if (tablename == null)
+        {
+            String group = DefaultMetadata.getGroupFor(_dataclazz);
+            tablename = gname + "__" + group;
+            tablename = tablename.replaceAll("\\-", "_");
+            //System.out.println("For: " + gname + ":" + _dataclazz.getName() + ": Returning: " + tablename);
+        }
         return tablename;
     }
 
@@ -175,6 +180,8 @@ public class DataMetadataImpl implements DataMetadata, DSErrorCodes
         }
         _attributes.put(nm, meta);
         AttributeMetadata exist = _columns.get(colnm);
+        if (meta.isBackwardReference())
+            exist = null; //backward reference, col is same as
         if (exist == null)
         {
             _columns.put(colnm, meta);
@@ -196,7 +203,7 @@ public class DataMetadataImpl implements DataMetadata, DSErrorCodes
             }
         }
 
-        if (meta.isSubObject()) _relatedColumns.put(colnm, meta);
+        if (meta.isSubObject()) _relatedColumns.put(meta.columnName(), meta);
         //This is a sub field, hence add it.
         if (meta.associatedMetadata() != null)
         {

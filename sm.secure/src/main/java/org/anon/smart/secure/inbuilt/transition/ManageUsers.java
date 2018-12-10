@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import org.anon.smart.base.tenant.shell.RuntimeShell;
 import org.anon.smart.secure.inbuilt.data.Session;
 import org.anon.smart.secure.inbuilt.data.SmartUser;
+import org.anon.smart.secure.inbuilt.data.UserPreference;
 import org.anon.smart.secure.inbuilt.data.SmartRole;
 import org.anon.smart.secure.inbuilt.events.CreateUser;
 import org.anon.smart.secure.inbuilt.events.AddIdentity;
@@ -58,6 +59,7 @@ import org.anon.smart.secure.inbuilt.data.iden.IdentityType;
 import org.anon.smart.secure.inbuilt.responses.SecurityResponse;
 import org.anon.smart.secure.inbuilt.data.iden.Password;
 import org.anon.smart.secure.sdomain.SmartSecureData;
+import org.anon.smart.secure.session.SessionDirector;
 
 import static org.anon.smart.base.utils.AnnotationUtils.*;
 import static org.anon.utilities.services.ServiceLocator.*;
@@ -298,6 +300,27 @@ public class ManageUsers
         assertion().assertNotNull(suser, "Cannot find user for: " + userid);
         AddIdentity ident = new AddIdentity(identity, cred, type);
         return addIdentity(suser, ident);
+    }
+
+
+    public void addUserPreference(String preference, Object value)
+        throws CtxException
+    {
+        Session sess = SessionDirector.currentSession();
+        assertion().assertNotNull(sess, "Cannot setup preferences without a valid session.");
+        String userid = sess.getUserId();
+        RuntimeShell rshell = RuntimeShell.currentRuntimeShell();
+        String group = className(UserPreference.class);
+        String flow = flowFor(UserPreference.class);
+        String key = UserPreference.constructKey(userid, preference);
+        System.out.println("Adding user preference for : " + key + ":" + userid + ":" + preference + ":" + value);
+        UserPreference preferences = (UserPreference)rshell.lookupFor(flow, group, key);
+        if (preferences == null)
+        {
+            preferences = new UserPreference(userid, preference);
+        }
+
+        preferences.setPreference(value);
     }
 }
 

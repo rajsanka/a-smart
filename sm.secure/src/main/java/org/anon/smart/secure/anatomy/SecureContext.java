@@ -41,6 +41,7 @@
 
 package org.anon.smart.secure.anatomy;
 
+import org.anon.smart.d2cache.D2CacheConfig;
 import org.anon.smart.base.loader.SmartLoader;
 import org.anon.smart.base.loader.LoaderVars;
 import org.anon.smart.base.dspace.DSpaceAuthor;
@@ -56,13 +57,26 @@ import static org.anon.utilities.services.ServiceLocator.*;
 import static org.anon.utilities.objservices.ObjectServiceLocator.*;
 
 import org.anon.utilities.anatomy.ModuleContext;
+import org.anon.utilities.anatomy.StartConfig;
 import org.anon.utilities.anatomy.JVMEnvironment;
 import org.anon.utilities.exception.CtxException;
 
 public class SecureContext implements CoreContext
 {
+
+    private D2CacheConfig _config;
+
     public SecureContext()
     {
+    }
+
+    public void setup(StartConfig cfg) 
+        throws CtxException 
+    {
+        if (!(cfg instanceof SecureConfig))
+            return;
+        SecureConfig ccfg = (SecureConfig)cfg;
+        _config = ccfg.repository();
     }
 
     public JVMEnvironment vmEnvironment()
@@ -89,7 +103,8 @@ public class SecureContext implements CoreContext
     public DSpaceAuthor spaceAuthor()
         throws CtxException
     {
-        return new SecureSpaceAuthor();
+        System.out.println("Secure: Creating a secure author with : " + _config);
+        return new SecureSpaceAuthor(_config);
     }
 
     public static SecureContext secureContext()

@@ -288,32 +288,45 @@ public class DBUtilsWriter extends DBUtilsHandler implements DataWriter, DSError
         {
             Connection conn = cpe.getConnection();
             perf().checkpointHere("gotconnection");
-            CacheObjectData cd = objs.iterator().next();
-            T obj = (T)cd.getObject();
-            String sql = PersistableData.updateSQL(obj, true);
-            Object[][] params = new Object[objs.size()][];
-            AtomicInteger count = new AtomicInteger(-1);
-            StandardExceptionHandler handler = new StandardExceptionHandler(this, INVALID_UPDATE);
-            objs.parallelStream().forEach((CacheObjectData pd) -> {
-                try
+            Map<Class, List<CacheObjectData>> collected = objs.stream().collect(Collectors.groupingBy(CacheObjectData::getObjectClass));
+            Stack<Class> seq = DataSchema.sequence(collected.keySet());
+            UpdateHandler handler = new UpdateHandler(cpe, objs, true);
+            //for (List<T> cobjs : collected.values())
+            while (!seq.empty())
+            {
+                Class handle = seq.pop();
+                List<CacheObjectData> cobjs = collected.get(handle);
+                if (cobjs != null)
                 {
-                    T p = (T)pd.getObject();
-                    Object[] iparams = PersistableData.updateArray(p, true);
-                    int ind = count.incrementAndGet();
-                    params[ind] = iparams;
+                    CacheObjectData cd = cobjs.iterator().next();
+                    T obj = (T)cd.getObject();
+                    String sql = PersistableData.updateSQL(obj, true);
+                    Object[][] params = new Object[objs.size()][];
+                    AtomicInteger count = new AtomicInteger(-1);
+                    StandardExceptionHandler excepthandler = new StandardExceptionHandler(this, INVALID_UPDATE);
+                    cobjs.parallelStream().forEach((CacheObjectData pd) -> {
+                        try
+                        {
+                            T p = (T)pd.getObject();
+                            Object[] iparams = PersistableData.updateArray(p, true);
+                            int ind = count.incrementAndGet();
+                            params[ind] = iparams;
+                        }
+                        catch (Exception e)
+                        {
+                            excepthandler.handleException(e);
+                        }
+                    });
+                    //need to hook to clean up, currently it has to be manually called :(
+                    excepthandler.hasException();
+                    System.out.println("Executing SQL: " + sql);
+                    Future<int[]> future = _runner.batch(conn, sql, params);
+                    perf().checkpointHere("updated");
+                    handler.addFuture(future);
                 }
-                catch (Exception e)
-                {
-                    handler.handleException(e);
-                }
-            });
-            //need to hook to clean up, currently it has to be manually called :(
-            handler.hasException();
-            Future<int[]> future = _runner.batch(conn, sql, params);
-            perf().checkpointHere("updated");
-            UpdateHandler handle = new UpdateHandler(future, cpe, objs);
-            handle.setRelease(_release);
-            return handle;
+            }
+            handler.setRelease(_release);
+            return handler;
         }
         catch (Exception e)
         {

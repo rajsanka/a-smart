@@ -42,6 +42,7 @@
 package org.anon.smart.smcore.anatomy;
 
 import org.anon.smart.channels.shell.SCShell;
+import org.anon.smart.d2cache.D2CacheConfig;
 import org.anon.smart.base.loader.SmartLoader;
 import org.anon.smart.base.loader.LoaderVars;
 import org.anon.smart.base.dspace.DSpaceAuthor;
@@ -62,11 +63,13 @@ import static org.anon.utilities.objservices.ObjectServiceLocator.*;
 
 import org.anon.utilities.memcache.LimitedMemCache;
 import org.anon.utilities.anatomy.ModuleContext;
+import org.anon.utilities.anatomy.StartConfig;
 import org.anon.utilities.anatomy.JVMEnvironment;
 import org.anon.utilities.exception.CtxException;
 
 public class SMCoreContext implements CoreContext
 {
+    private D2CacheConfig _repository;
     private SCShell _smartChannels;
     private LimitedMemCache<SmartData, SmartDataTruth> _truthCache;
 
@@ -75,6 +78,15 @@ public class SMCoreContext implements CoreContext
     {
         _smartChannels = new SCShell();
         _truthCache = cache().create(10000, new TruthCreator());
+    }
+
+    public void setup(StartConfig cfg) 
+        throws CtxException 
+    {
+        if (!(cfg instanceof SMCoreConfig))
+            return;
+        SMCoreConfig ccfg = (SMCoreConfig)cfg;
+        _repository = ccfg.repository();
     }
 
     public JVMEnvironment vmEnvironment()
@@ -102,7 +114,7 @@ public class SMCoreContext implements CoreContext
     public DSpaceAuthor spaceAuthor()
         throws CtxException
     {
-        return new DefaultAuthor();
+        return new DefaultAuthor(_repository);
     }
 
     public SmartDataTruth getTruthFor(SmartData sd)

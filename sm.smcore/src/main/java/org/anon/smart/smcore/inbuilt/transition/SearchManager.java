@@ -109,16 +109,16 @@ public class SearchManager {
             }
         }
 		
-        Map<String, String> val = searchEvent.getQueryMap();
+        Map<String, Object> val = searchEvent.getQueryMap();
         long l = 0;
         if (val.containsKey("TOTALSIZE"))
-            l = Long.parseLong(val.get("TOTALSIZE"));
+            l = Long.parseLong(val.get("TOTALSIZE").toString());
         System.out.println("***** Setting total Found as: " + l);
 		SearchResponse resp = new SearchResponse(searchResult);
         resp.setTotalFound(l);
 	}
 
-    public boolean searchService(String flow, String group, Map<String, String> query, List result, Integer pn, Integer ps, String sortby, Boolean asc)
+    public boolean searchService(String flow, String group, Map<String, Object> query, List result, Integer pn, Integer ps, String sortby, Boolean asc)
         throws CtxException
     {
 		if ((query != null) && (query.size() > 0))
@@ -167,7 +167,7 @@ public class SearchManager {
     public boolean searchData(String flow, String group, List result, String byOwner, String status, String srchGroup)
         throws CtxException
     {
-        Map<String, String> query = new HashMap<String, String>();
+        Map<String, Object> query = new HashMap<String, Object>();
         if ((byOwner != null) && (!byOwner.equals("Any")))
         {
             query.put("___smart_legend___._ownedBy", byOwner);
@@ -183,7 +183,7 @@ public class SearchManager {
                 statsrch = statsrch + add + stats[i];
                 add = " OR ";
             }
-            query.put("___smart_currentState___._stateName", "(" + statsrch + ")");
+            query.put("___smart_state___", "(" + statsrch + ")");
         }
 
         if ((srchGroup != null) && (!srchGroup.equals("Any")))

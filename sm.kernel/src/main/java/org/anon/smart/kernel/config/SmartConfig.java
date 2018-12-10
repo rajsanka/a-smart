@@ -50,6 +50,7 @@ public class SmartConfig implements VerifiableObject, java.io.Serializable
 {
     private InstallConfig install;
     private EnableFlags enable;
+    private RepositoryConfig repository;
     private List<ChannelConfig> channels;
     private List<ModuleConfig> modules;
     private boolean _verified;
@@ -82,5 +83,6 @@ public class SmartConfig implements VerifiableObject, java.io.Serializable
     public EnableFlags getFlags() { return enable; }
     public List<ChannelConfig> getChannels() { return channels; }
     public List<ModuleConfig> getModules() { return modules; }
+    public RepositoryConfig getRepository() { return repository; }
 }
 

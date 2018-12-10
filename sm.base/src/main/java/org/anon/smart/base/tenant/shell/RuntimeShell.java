@@ -159,7 +159,7 @@ public class RuntimeShell implements SmartShell, TenantConstants
         return lookupFor(MONITOR_SPACE, group, key);
     }
 
-    public List<Object> searchFor(String spacemodel, Class clz, Map<String, String> query, long size, long pageNum, long pageSize, String sortBy, boolean asc)
+    public List<Object> searchFor(String spacemodel, Class clz, Map<String, Object> query, long size, long pageNum, long pageSize, String sortBy, boolean asc)
         throws CtxException
     {
         DataShell shell = (DataShell)_context.tenant().dataShellFor(spacemodel);

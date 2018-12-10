@@ -135,15 +135,8 @@ public class SmartDataTruth implements TruthData
         throws CtxException
     {
         //TODO: for now nothing??
-        _confirmed.put(txnid, (SmartDataED)edata);
-        _allEmpirical.remove(txnid);
-        return true;
-    }
-
-    public boolean accept(UUID txnid, EmpiricalData edata)
-        throws CtxException
-    {
         //need to copy dirty fields from edata to truthdata
+        _confirmed.put(txnid, (SmartDataED)edata);
         assertion().assertTrue(_confirmed.containsKey(txnid), "Cannot be accepted. The data is not present in the confirmed list.");
         TransitionContext ctx = (TransitionContext)threads().threadContext();
         assertion().assertNotNull(ctx, "The object is not in an transition context to be accepted.");
@@ -166,6 +159,37 @@ public class SmartDataTruth implements TruthData
             CrossLinkAny clany = new CrossLinkAny(_truthData);
             clany.invoke(commit);
         }
+       
+        _allEmpirical.remove(txnid);
+        return true;
+    }
+
+    public boolean accept(UUID txnid, EmpiricalData edata)
+        throws CtxException
+    {
+        //need to copy dirty fields from edata to truthdata
+        /*assertion().assertTrue(_confirmed.containsKey(txnid), "Cannot be accepted. The data is not present in the confirmed list.");
+        TransitionContext ctx = (TransitionContext)threads().threadContext();
+        assertion().assertNotNull(ctx, "The object is not in an transition context to be accepted.");
+        //In this scenario the prime object from which it is linked is locked, hence we 
+        //need not lock the linkeddata. TODO: if this is not true, then the data has to
+        //be locked.
+        //DataLinker linker = new DataLinker();
+        DataLinker linker = ctx.getLinker();
+        linker.createLinks(ctx, (SmartDataED)edata, _truthData, _isNew);
+
+        //ctx.transaction().addToTransaction(_truthData);
+        ctx.transaction().addToTransaction((SmartDataED)edata);
+
+        //call the commit function if any present
+        String commit = commitFor(_truthData.getClass());
+        System.out.println("Got commit as: " + commit + ":" + _truthData.getClass());
+        if ((commit != null) && (commit.length() > 0))
+        {
+            System.out.println("Invoking commit?" + commit);
+            CrossLinkAny clany = new CrossLinkAny(_truthData);
+            clany.invoke(commit);
+        }*/
         _confirmed.remove(txnid);
         //need to add me to the cache.
         _isNew = false;

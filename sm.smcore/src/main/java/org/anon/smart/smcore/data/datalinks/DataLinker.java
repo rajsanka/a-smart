@@ -44,6 +44,7 @@ package org.anon.smart.smcore.data.datalinks;
 import java.util.Map;
 import java.util.List;
 import java.util.UUID;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
@@ -95,6 +96,51 @@ public class DataLinker
             //again we do not handle Map<Somthing, something>. Hence this
             //has to be only one parameter.
             ret = (Class)actuals[0]; //if the parameter is not qualified, we have a problem
+        }
+
+        return ret;
+    }
+
+    public List<SmartData> getLinkedObjects(SmartData data)
+        throws CtxException
+    {
+        String fflow = flowFor(data.getClass());
+        String fname = objectName(data);
+        CrossLinkFlowDeployment dep = _dshell.deploymentFor(fflow);
+        List<CrossLinkLink> lnks = dep.linksFor(fflow, fname);
+        List<SmartData> ret = new ArrayList<SmartData>();
+        for (int i = 0; (lnks != null) && (i < lnks.size()); i++)
+        {
+            //what if there is more than one link for the same object??
+            //not sure we shd allow this at all?
+            CrossLinkLink l = lnks.get(i);
+            CrossLinkLink.CrossLinkLinkObject fobj = l.getFromObject();
+            CrossLinkLink.CrossLinkLinkObject tobj = l.getToObject();
+
+            String attr = null;
+            String tflow = fobj.getFlow();
+            String tname = fobj.getObject();
+            attr = fobj.getField();
+            if (tobj.getFlow().equals(fflow) && tobj.getObject().equals(tname))
+            {
+                tflow = tobj.getFlow();
+                tname = tobj.getObject();
+                attr = tobj.getField();
+            }
+            if (attr != null)
+            {
+                Object key = reflect().getAnyFieldValue(data.getClass(), data, attr);
+                System.out.println("Retrieved: " + attr + ":" + key);
+                if (key != null)
+                {
+                    LinkedData ldata = getLinkBetween(fobj.getFlow(), fobj.getObject(), tobj.getObject(), key);
+                    if (ldata != null)
+                    {
+                        List<SmartData> lst = getDataFor(tflow, ldata, null);
+                        if (lst != null) ret.addAll(lst);
+                    }
+                }
+            }
         }
 
         return ret;
@@ -175,9 +221,17 @@ public class DataLinker
         String ltype = data.linkType();
         for (UUID id : objects)
         {
-            SmartData d = (SmartData)_rshell.lookupFor(flow, ltype, id);
+            //SmartData d = (SmartData)_rshell.lookupFor(flow, ltype, id);
+            Class cls = _dshell.dataClass(flow, ltype);
+            Map<String, Object> query = new HashMap<String, Object>();
+            query.put("___smart_id___", id.toString());
+            List<Object> l = _rshell.searchFor(flow, cls, query, -1, -1, -1, null, false);
+            SmartData d = null;
+            if ((l != null)  && (l.size() > 0)) d = (SmartData)l.get(0);
             System.out.println("Retrieving data for: " + ltype + ":" + id + ":" + d);
-            if ((d != null) && (type().isAssignable(d.getClass(), pcls)))
+            if ((d != null) && (pcls == null))
+                ret.add(d);
+            else if ((d != null) && (type().isAssignable(d.getClass(), pcls)))
                 ret.add(d);
         }
 

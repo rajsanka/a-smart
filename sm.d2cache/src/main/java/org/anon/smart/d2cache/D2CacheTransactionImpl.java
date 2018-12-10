@@ -185,4 +185,13 @@ public class D2CacheTransactionImpl implements D2CacheTransaction {
         }
     }
 
+    public void simulate()
+        throws CtxException
+    {
+        for (StoreTransaction txn : _storeTransactions)
+        {
+            txn.simulate();
+        }
+    }
+
 }

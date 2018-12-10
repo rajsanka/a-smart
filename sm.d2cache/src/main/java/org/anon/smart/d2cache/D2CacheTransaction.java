@@ -56,6 +56,9 @@ public interface D2CacheTransaction
     public void add(StoreItem item)
         throws CtxException;
 
+    public void simulate()
+        throws CtxException;
+
     public void commit()
         throws CtxException;
 

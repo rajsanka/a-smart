@@ -86,4 +86,8 @@ public class MyTestClass implements CacheableObject, Serializable{
 		// TODO Auto-generated method stub
 		
 	}
+
+    public boolean smart___isNew() {
+        return false;
+    }
 }

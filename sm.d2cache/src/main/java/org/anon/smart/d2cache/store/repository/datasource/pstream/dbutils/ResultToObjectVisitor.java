@@ -200,7 +200,7 @@ public class ResultToObjectVisitor implements CVisitor, DSErrorCodes
                     //ByteArrayInputStream istr = new ByteArrayInputStream(jval.toString().getBytes());
                     //ret = convert().readObject(istr, ameta.attributeType(), translator.json);
                     //TODO: fix this;
-                    System.out.println("Converting json for: " + jval.toString() + ":" + ":" + ameta.attributeType() + ":" + ameta.attributeField().getName());
+                    //System.out.println("Converting json for: " + jval.toString() + ":" + ":" + ameta.attributeType() + ":" + ameta.attributeField().getName());
                     Gson gson = new GsonBuilder().setPrettyPrinting().create();
                     Type t = ameta.attributeField().getGenericType();
                     Class cls = ameta.attributeField().getType();
@@ -213,12 +213,12 @@ public class ResultToObjectVisitor implements CVisitor, DSErrorCodes
                         oneval = vals[1];
                     }
 
-                    if (!clsname.equals(cls.getName()) && (!type().isAssignable(cls, Collection.class)))
+                    if (!clsname.equals(cls.getName()) && (!type().isAssignable(cls, Collection.class)) && (!type().isAssignable(cls, Map.class)))
                     {
                         CrossLinkAny any = new CrossLinkAny(vals[0]);
                         t = any.linkType();
                     }
-                    System.out.println("Converting: " + jval + ":" + t + ":" + ameta.attributeType() + ":" + ameta.attributeField().getName() + ":" + clsname + ":" + oneval);
+                    //System.out.println("Converting: " + jval + ":" + t + ":" + ameta.attributeType() + ":" + ameta.attributeField().getName() + ":" + clsname + ":" + oneval);
                     ret = gson.fromJson(oneval.toString(), t);
                     ctx.modify(ret);
                 }
@@ -229,16 +229,24 @@ public class ResultToObjectVisitor implements CVisitor, DSErrorCodes
 
         if ((fld != null) && (name != null) && (_subStreams != null) && (_subStreams.containsKey(name)))
         {
-            System.out.println("Retrieving data from substream for: " + name);
-            PersistableDataStream astream = _subStreams.get(name);
-            //jval has the related column read from this resultset
-            Set<CacheableObject> vals = astream.readRelatedData(jval);
-            System.out.println("Retrieving data for: " + name + ":" + vals);
-            val = subObjectFrom(vals, fld.getType());
-            //return null so we do not traverse into sub objects? But does this mean we cannot
-            //go sub objects of sub? It will get set when that object is created from the
-            //Persistence stream. So should not be a problem.
-            ctx.modify(val);
+            try
+            {
+                //System.out.println("Retrieving data from substream for: " + name);
+                PersistableDataStream astream = _subStreams.get(name);
+                //System.out.println("Retrieving data from substream for: " + name + ":" + astream);
+                //jval has the related column read from this resultset
+                Set<CacheableObject> vals = astream.readRelatedData(jval);
+                //System.out.println("Retrieving data for: " + name + ":" + vals);
+                val = subObjectFrom(vals, fld.getType());
+                //return null so we do not traverse into sub objects? But does this mean we cannot
+                //go sub objects of sub? It will get set when that object is created from the
+                //Persistence stream. So should not be a problem.
+                ctx.modify(val);
+            }
+            catch (CtxException e)
+            {
+                e.printStackTrace();
+            }
             return null;
         }
         else if (ctx.before() && (name != null))

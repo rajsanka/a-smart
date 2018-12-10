@@ -49,6 +49,7 @@ import org.anon.smart.secure.inbuilt.data.iden.SCredential;
 import org.anon.smart.secure.inbuilt.data.auth.AuthDetails;
 import org.anon.smart.secure.inbuilt.data.auth.SAuthenticator;
 import org.anon.smart.secure.inbuilt.events.Authenticate;
+import org.anon.smart.secure.inbuilt.events.SessionValid;
 import org.anon.smart.secure.inbuilt.events.Logout;
 import org.anon.smart.secure.inbuilt.responses.SessionDetails;
 import org.anon.smart.secure.inbuilt.responses.SecurityResponse;
@@ -95,12 +96,19 @@ public class AuthenticateUser
         assertion().assertNotNull(sess, "Please login to retrieve the permitted features.");
         SmartUser user = sess.getUser();
         List<SmartRole> roles = user.lookupRoles();
+        System.out.println("Got roles: " + roles + ":" + user.getRoles());
         PermittedFeatures features = new PermittedFeatures();
         
         for (int i = 0; (roles != null) && (i < roles.size()); i++)
             features.addPermittedFrom(roles.get(i));
 
         return false;
+    }
+
+    public void validSession(SessionValid valid)
+        throws CtxException
+    {
+        SecurityResponse resp = new SecurityResponse("Valid Session");
     }
 }
 

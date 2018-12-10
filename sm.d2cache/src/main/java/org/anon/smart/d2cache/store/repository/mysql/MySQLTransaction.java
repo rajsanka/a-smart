@@ -81,7 +81,8 @@ public class MySQLTransaction extends AbstractStoreTransaction
         return null;
 	}
 
-    public void commit()
+    @Override
+    public void simulate()
         throws CtxException
     {
         _futures = _manager.flush();
@@ -89,13 +90,25 @@ public class MySQLTransaction extends AbstractStoreTransaction
         {
             if (_futures[i] != null) _futures[i].waitToComplete();
         }
+    }
 
+    public void commit()
+        throws CtxException
+    {
+        for (int i = 0; (_futures != null) && (i < _futures.length); i++)
+        {
+            if (_futures[i] != null) _futures[i].commit();
+        }
     }
 
     public void rollback()
         throws CtxException
     {
-        //don't do anything here.
+        System.out.println("MySQLTransation: Calling rollback for future: " + _futures);
+        for (int i = 0; (_futures != null) && (i < _futures.length); i++)
+        {
+            if (_futures[i] != null) _futures[i].rollback();
+        }
     }
 
     public boolean shouldStore(String storeIn)

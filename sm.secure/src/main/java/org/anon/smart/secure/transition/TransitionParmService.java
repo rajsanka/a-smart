@@ -43,6 +43,7 @@ package org.anon.smart.secure.transition;
 
 import org.anon.smart.smcore.transition.TConstants;
 import org.anon.smart.secure.transition.parms.SessionProbe;
+import org.anon.smart.secure.transition.parms.UserPreferencesProbe;
 
 import org.anon.utilities.gconcurrent.execute.ParamType;
 import org.anon.utilities.exception.CtxException;
@@ -57,6 +58,7 @@ public class TransitionParmService implements TConstants
         throws CtxException
     {
         ParamType.registerProbe(SESSION, new SessionProbe(), true);
+        ParamType.registerProbe(USERPREFERENCES, new UserPreferencesProbe(), true);
     }
 }
 

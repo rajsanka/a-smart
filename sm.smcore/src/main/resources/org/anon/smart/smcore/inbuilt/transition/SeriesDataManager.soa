@@ -1,0 +1,14 @@
+name:       SeriesDataManager
+type:       Transition
+flow:       AllFlows
+foreach:    FlowAdmin|GetSeriesEvent
+actions:
+    - name:     getSeries
+      method:   getSeries
+      foreach:  FlowAdmin|GetSeriesEvent
+      from:     active
+      to:       active
+services:
+    - name:     seriesDataFor
+      method:   seriesDataFor
+

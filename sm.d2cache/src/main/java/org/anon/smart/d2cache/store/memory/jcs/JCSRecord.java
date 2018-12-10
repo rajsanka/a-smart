@@ -41,7 +41,9 @@
 
 package org.anon.smart.d2cache.store.memory.jcs;
 
+import java.util.Map;
 import java.util.List;
+import java.util.HashMap;
 import java.util.ArrayList;
 
 import org.anon.smart.d2cache.store.AbstractStoreRecord;
@@ -52,15 +54,19 @@ import org.anon.utilities.reflect.DFDataContext;
 import org.anon.utilities.reflect.DataContext;
 import org.anon.utilities.exception.CtxException;
 
+import static org.anon.utilities.services.ServiceLocator.*;
+
 public class JCSRecord extends AbstractStoreRecord
 {
     private List<Object> _keys;
+    private Map<String, Object> _modifications;
 
     public JCSRecord(String group, Object primarykey, Object curr, Object orig)
     {
         super(group, primarykey, curr, orig);
         _keys = new ArrayList<Object>();
         _keys.add(getRowId());
+        _modifications = new HashMap<String, Object>();
 	}
 
     public void append(DataContext ctx, boolean update)
@@ -75,11 +81,38 @@ public class JCSRecord extends AbstractStoreRecord
             {
                 _keys.add(ctx.fieldVal());
             }
+            else if (update)
+            {
+                //if not update, it should use the getModified.
+                System.out.println("--->JCS Cache - Modified field: " + ctx.fieldpath() + ":" + ctx.fieldVal());
+                _modifications.put(ctx.fieldpath(), ctx.fieldVal());
+            }
         }
     }
 
      
     List<Object> getKeys() { return _keys; }
     Object getModified() { return _currentObject; }
+
+    Object getStoreObject()
+        throws CtxException
+    {
+        Object ret = getOriginal();
+        if (ret != null)
+        {
+            for (String path : _modifications.keySet())
+            {
+                Object val = _modifications.get(path);
+                System.out.println("--->JCS Cache - Setting field: " + path + ":" + val);
+                reflect().setAnyFieldValueWithPath(ret.getClass(), ret, path, val);
+            }
+        }
+        else
+        {
+            ret = getModified();
+        }
+
+        return ret;
+    }
 }
 

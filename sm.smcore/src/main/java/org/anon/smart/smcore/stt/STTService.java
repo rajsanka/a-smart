@@ -51,6 +51,7 @@ import org.anon.smart.smcore.stt.tl.EventResponseTL;
 import org.anon.smart.smcore.stt.tl.MessageTL;
 import org.anon.smart.smcore.stt.tl.TransitionTL;
 import org.anon.smart.smcore.stt.tl.ConfigTL;
+import org.anon.smart.smcore.stt.tl.SeriesTL;
 
 import org.anon.utilities.exception.CtxException;
 
@@ -69,6 +70,7 @@ public class STTService implements FlowConstants
         STTRegister.registerSTT(RESPONSETYPE, "org.anon.smart.smcore.stt.EventResponseSTT");
         STTRegister.registerSTT(TRANSITIONTYPE, "org.anon.smart.smcore.stt.TransitionSTT");
         STTRegister.registerSTT(CONFIGTYPE, "org.anon.smart.smcore.stt.ConfigSTT");
+        STTRegister.registerSTT(SERIESTYPE, "org.anon.smart.smcore.stt.SeriesSTT");
         STTRegister.registerSTT(MESSAGETYPE, "org.anon.smart.smcore.stt.MessageSTT");
 
         TemplateReader.registerTemplate(PRIMETYPE, SmartPrimeObjectTL.class);
@@ -77,6 +79,7 @@ public class STTService implements FlowConstants
         TemplateReader.registerTemplate(RESPONSETYPE, EventResponseTL.class);
         TemplateReader.registerTemplate(TRANSITIONTYPE, TransitionTL.class);
         TemplateReader.registerTemplate(CONFIGTYPE, ConfigTL.class);
+        TemplateReader.registerTemplate(SERIESTYPE, SeriesTL.class);
         TemplateReader.registerTemplate(MESSAGETYPE, MessageTL.class);
                                              
     }

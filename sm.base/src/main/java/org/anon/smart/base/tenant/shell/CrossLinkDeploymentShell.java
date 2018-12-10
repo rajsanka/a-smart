@@ -138,6 +138,12 @@ public class CrossLinkDeploymentShell extends CrossLinker
         return (Class)linkMethod("configClass", dep, type);
     }
 
+    public Class seriesClass(String dep, String type)
+        throws CtxException
+    {
+        return (Class)linkMethod("seriesClass", dep, type);
+    }
+
     public void enableForMe(String name, String[] features, boolean lookup)
         throws CtxException
     {
@@ -169,6 +175,12 @@ public class CrossLinkDeploymentShell extends CrossLinker
         throws CtxException
     {
         return (String[])linkMethod("linksFor", dep, cls, key);
+    }
+
+    public List<String> getWorkspaces(String dep)
+        throws CtxException
+    {
+        return (List<String>)linkMethod("getWorkspaces", dep);
     }
 }
 

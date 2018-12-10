@@ -41,6 +41,7 @@
 
 package org.anon.smart.base.dspace;
 
+import org.anon.smart.d2cache.D2CacheConfig;
 import org.anon.smart.d2cache.D2CacheScheme;
 import org.anon.smart.d2cache.DataFilter;
 
@@ -48,16 +49,16 @@ import org.anon.utilities.exception.CtxException;
 
 public class TransactDSpaceImpl extends AbstractDSpace
 {
-    public TransactDSpaceImpl(String name, String filetype)
+    public TransactDSpaceImpl(String name, String filetype, D2CacheConfig cfg)
         throws CtxException
     {
-        super(name, filetype);
+        super(name, filetype, cfg);
     }
 
-     public TransactDSpaceImpl(String name, DataFilter[] filters, String filetype)
+     public TransactDSpaceImpl(String name, DataFilter[] filters, String filetype, D2CacheConfig cfg)
         throws CtxException
     {
-        super(name, filters, filetype);
+        super(name, filters, filetype, cfg);
     }
 
 
@@ -72,5 +73,9 @@ public class TransactDSpaceImpl extends AbstractDSpace
         return D2CacheScheme.scheme.filestore;
     }
 
+    protected D2CacheScheme.scheme getNonCacheScheme()
+    {
+        return D2CacheScheme.scheme.storemysql;
+    }
 }
 

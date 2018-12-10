@@ -54,10 +54,11 @@ public class QueryObject
 	public class QueryItem 
     {
 		private String attribute;
-		private String value;
+		private Object value;
+        private String operator;
 		//private boolean mandatory;
 		
-		public QueryItem(String attr, String val) 
+		public QueryItem(String attr, Object val) 
         {
 			this(attr, val, true);
 		}
@@ -69,10 +70,21 @@ public class QueryObject
 			
 		}
 		
-		public QueryItem(String attr, String val, boolean mandatory) 
+		public QueryItem(String attr, Object val, boolean mandatory) 
         {
 			attribute = attr;
 			value = val;
+            String[] tokens = attribute.split(" ");
+            //it can be given as someattribute = val, or someattribute > val and so on.
+            //attr will have someattribute =, someattribute >, and val will have the value
+            for (int i = 0; i < tokens.length; i++)
+            {
+                if (i == 0) {
+                    attribute = tokens[i];
+                } else if (tokens[i].trim().length() > 0) {
+                    operator = tokens[i].trim();
+                }
+            }
 		}
 
 		public String attribute()
@@ -82,7 +94,17 @@ public class QueryObject
 
         public String value()
         {
+            return value.toString();
+        }
+
+        public Object objectValue()
+        {
             return value;
+        }
+
+        public String operator()
+        {
+            return operator;
         }
 	}
 
@@ -95,18 +117,18 @@ public class QueryObject
 		query = new ArrayList<QueryItem>();
 	}
 	
-	public void addCondition(String attr, String val, boolean mandatory)
+	public void addCondition(String attr, Object val, boolean mandatory)
         throws CtxException 
     {
 		query.add(new QueryItem(attr, val, mandatory));
 	}
 
-	public void addCondition(String cond, String val) 
+	public void addCondition(String cond, Object val) 
         throws CtxException 
     {
 		addCondition(cond, val, true);
 	}
-	public void addConditions(Map<String, String> queryMap) throws CtxException
+	public void addConditions(Map<String, Object> queryMap) throws CtxException
 	{
 		for(String s : queryMap.keySet())
 		{

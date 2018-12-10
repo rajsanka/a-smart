@@ -1,0 +1,4 @@
+name:       CreateWorkSpaceFromTemplate
+type:       Event
+flow:       WorkbenchFlow
+

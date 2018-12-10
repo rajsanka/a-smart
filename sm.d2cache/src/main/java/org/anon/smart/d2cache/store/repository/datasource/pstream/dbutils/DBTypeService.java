@@ -102,7 +102,7 @@ public class DBTypeService
             except().rt(e, INSTANCE, new CtxException.Context("DBTypeService", "readData"));
         }
 
-        System.out.println("Got data: " + ret);
+        //System.out.println("Got data: " + ret);
         return (T)ret;
     }
 }

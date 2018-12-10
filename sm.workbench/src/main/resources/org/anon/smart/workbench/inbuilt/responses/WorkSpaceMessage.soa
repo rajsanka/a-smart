@@ -1,0 +1,4 @@
+name:   WorkSpaceMessage
+type:   Response
+flow:   WorkbenchFlow
+

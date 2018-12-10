@@ -59,7 +59,7 @@ import org.anon.utilities.exception.CtxException;
 @IncludeSTT(types={"Data"})
 public class SmartPrimeDataSTT extends SmartDataSTT implements SmartPrimeData
 {
-    private SmartFlow ___smart_flow___;
+    private transient SmartFlow ___smart_flow___;
 
     public SmartPrimeDataSTT()
     {

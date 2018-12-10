@@ -49,6 +49,7 @@ import org.anon.smart.d2cache.D2CacheScheme;
 import org.anon.smart.d2cache.D2CacheTransaction;
 import org.anon.smart.d2cache.Reader;
 import org.anon.smart.d2cache.DataFilter;
+import org.anon.smart.d2cache.D2CacheConfig;
 
 import static org.anon.utilities.objservices.ObjectServiceLocator.*;
 
@@ -57,27 +58,35 @@ import org.anon.utilities.exception.CtxException;
 public abstract class AbstractDSpace implements TransactDSpace
 {
     private D2Cache _cache;
+    private D2Cache _noncached;
 	private D2Cache _fileCache;
     private String _name;
     private DataFilter[] _dataFilters;
     private String _fileType;
+    private D2CacheConfig _config;
 
-    protected AbstractDSpace(String name, String filetype)
+    protected AbstractDSpace(String name, String filetype, D2CacheConfig cfg)
         throws CtxException
     {
-        this(name, null, filetype);
+        this(name, null, filetype, cfg);
     }
 
-    protected AbstractDSpace(String name, DataFilter[] filters, String filetype)
+    protected AbstractDSpace(String name, DataFilter[] filters, String filetype, D2CacheConfig cfg)
         throws CtxException
     {
+        _name = name;
         _fileType = filetype;
-        _cache = D2CacheScheme.getCache(getCacheScheme(), name, getFlags());
+        _config = cfg;
+
+        System.out.println("Got Config as: " + _config);
+        _cache = D2CacheScheme.getCache(getCacheScheme(), name, getFlags(), _config);
+        _noncached = D2CacheScheme.getCache(getNonCacheScheme(), name, getFlags(), _config);
         _fileCache = D2CacheScheme.getCache(getFileCacheScheme(), name, getFlags());
         _dataFilters = filters;
     }
 
     protected abstract D2CacheScheme.scheme getCacheScheme();
+    protected abstract D2CacheScheme.scheme getNonCacheScheme();
     protected abstract D2CacheScheme.scheme getFileCacheScheme();
     protected int getFlags()
         throws CtxException
@@ -105,6 +114,7 @@ public abstract class AbstractDSpace implements TransactDSpace
 
         return rdr;
     }
+
     public Reader getBrowsableReader()
         throws CtxException
     {
@@ -115,16 +125,30 @@ public abstract class AbstractDSpace implements TransactDSpace
         return rdr;
     }
 
-	public D2CacheTransaction startTransaction(UUID id, boolean isFSTransaction)
+    public Reader nonCachedReader()
+        throws CtxException
+    {
+        System.out.println("AbstractDSpace: NonCached reader is used.");
+        Reader rdr = _noncached.myReader(false);
+        if (_dataFilters != null)
+            rdr.userFilters(_dataFilters);
+
+        return rdr;
+    }
+
+	public D2CacheTransaction startTransaction(UUID id, boolean isFSTransaction, boolean noncache)
 			throws CtxException {
                 D2CacheTransaction txn = null;
+        System.out.println("AbstractDSpace: StartTransaction noncached is ." + noncache);
 		if (isFSTransaction)
 			txn = _fileCache.startTransaction(id);
-		else
+		else if (noncache)
+            txn = _noncached.startTransaction(id);
+        else
 			txn = _cache.startTransaction(id);
 		
 		if (_dataFilters != null)
-                    txn.setupFilters(_dataFilters);
+            txn.setupFilters(_dataFilters);
 
         return txn;
 	}

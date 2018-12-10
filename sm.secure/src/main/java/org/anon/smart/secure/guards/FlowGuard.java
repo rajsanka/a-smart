@@ -117,6 +117,7 @@ public class FlowGuard extends BaseSGuard implements Constants
         CrossLinkSecureFlowDeployment sdep = new CrossLinkSecureFlowDeployment(dep.link());
         List<CrossLinkSecureConfig> sconfig = sdep.getSecurity();
 
+        System.out.println("FlowGuard: security config is: " + sconfig + ":" + dep.link());
         if ((sconfig == null) || (sconfig.size() <= 0))
             return Access.none;
 
@@ -126,6 +127,7 @@ public class FlowGuard extends BaseSGuard implements Constants
             String guard = clscfg.getGuardType();
 
             SGuard flowguard = SGuardType.guardFor(guard, clscfg.getParms(), _guardForClass);
+            System.out.println("FlowGuard: Checking with guard: " + flowguard);
 
             if ((flowguard instanceof BaseSGuard) && (((BaseSGuard)flowguard).crossguardpermitted(accessed, visitor, parms) != Access.none))
                 return Access.defaccess;

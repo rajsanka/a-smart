@@ -104,6 +104,7 @@ public class CacheObjectTraversal implements TVisitor {
 	            ret = ctx.traversingObject();
 	        }
 	        for(StoreRecord rec : _recList) {
+                System.out.println("Calling append for: " + ctx.field() + ":" + ctx.fieldVal());
 	        	rec.append(ctx, _update);
 	        }
 	        

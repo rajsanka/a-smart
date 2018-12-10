@@ -58,7 +58,9 @@ import org.anon.utilities.exception.CtxException;
 
 public class ConfigSTT implements ConfigData
 {
-    @KeyAnnotate(keys="___smart_keys___")
+    @KeyAnnotate(keys="___smart_config_key___")
+    private String ___smart_config_key___;
+
     private List<Object> ___smart_keys___;
     //private UUID ___smart_config_id___;
     private DataLegend ___smart_legend___;
@@ -98,6 +100,7 @@ public class ConfigSTT implements ConfigData
         if (___smart_keys___ == null)
             ___smart_keys___ = new ArrayList<Object>();
         ___smart_keys___.add(k);
+        ___smart_config_key___ = k.toString(); //in mysql limited keys
     }
 
     public String smart___objectGroup()

@@ -102,10 +102,10 @@ public abstract class AbstractSQL implements CompiledSQL
 
     public void addAttributeFragment(AttributeMetadata meta)
     {
-        if (meta.relatedVia() == null) 
+        if ((meta.relatedVia() == null)  || (meta.isBackwardReference()))
         { 
             _attributeFlds.add(meta.attributeField()); 
-            //System.out.println("Adding path: " + meta + ":" + meta.fieldpath());
+            //System.out.println(this.getClass().getName() + ":" + _table + ": Adding path: " + meta + ":" + meta.fieldpath());
             _attributePaths.add(meta.fieldpath()); 
         }
         //if the attributemetadata is a sub object then add the compiled sql
@@ -195,6 +195,12 @@ public abstract class AbstractSQL implements CompiledSQL
     public CompiledSQL[] subSQLs()
     {
         return _subSQLs.toArray(new CompiledSQL[0]);
+    }
+
+    @Override
+    public String sql(CompiledSQL p)
+    {
+        return ""; //default is nothing
     }
 }
 

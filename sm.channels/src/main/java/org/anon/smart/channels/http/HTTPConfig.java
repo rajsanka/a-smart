@@ -66,8 +66,8 @@ public class HTTPConfig implements ExternalConfig
         _secure = secure;
         _server = "localhost";
         _keyAlgorithm = "SunX509";
-        _keyStorePassword = "";
-        _keyStoreFile = "cert.jks";
+        _keyStorePassword = "123456";
+        _keyStoreFile = "certificate.p12";
     }
 
     public void setServer(String server)

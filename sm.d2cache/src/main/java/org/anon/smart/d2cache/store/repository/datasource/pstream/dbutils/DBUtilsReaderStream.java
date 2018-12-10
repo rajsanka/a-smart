@@ -42,6 +42,7 @@
 package org.anon.smart.d2cache.store.repository.datasource.pstream.dbutils;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
 
 import org.anon.smart.d2cache.CacheableObject;
 import org.anon.smart.d2cache.store.repository.datasource.pstream.PersistableDataStream;
@@ -89,7 +90,10 @@ public class DBUtilsReaderStream<T extends CacheableObject> extends PersistableD
         throws CtxException
     {
         super.closeStream();
-        if (_release) _connection.pool().unlockone(_connection);
+        if (_release) { 
+            _connection.closeConnection();
+            _connection.pool().unlockone(_connection);
+        }
     }
 
     public void waitCompletion()
@@ -101,8 +105,31 @@ public class DBUtilsReaderStream<T extends CacheableObject> extends PersistableD
         }
         catch (Exception e)
         {
+            e.printStackTrace();
             except().rt(e, this, new CtxException.Context("DBUtilsReaderStream", "waitComplete"));
         }
+    }
+
+    @Override
+    public T readNextData()
+        throws CtxException
+    {
+        try
+        {
+            System.out.println("DBUtilsReaderStream: Checking for executionexception");
+            _executionStatus.get(5, java.util.concurrent.TimeUnit.MILLISECONDS);
+        }
+        catch (ExecutionException ee)
+        {
+            ee.printStackTrace();
+            except().rt(ee, this, new CtxException.Context("DBUtilsReaderStream", "getExecutionError"));
+        }
+        catch (Exception e)
+        {
+            //e.printStackTrace();
+        }
+
+        return super.readNextData(500); //timeout after 500ms.
     }
 }
 

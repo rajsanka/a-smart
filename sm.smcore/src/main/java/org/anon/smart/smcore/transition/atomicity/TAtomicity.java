@@ -48,6 +48,8 @@ import org.anon.smart.smcore.data.SmartDataED;
 import org.anon.smart.smcore.data.SmartDataTruth;
 import org.anon.smart.smcore.data.ConfigData;
 import org.anon.smart.smcore.data.ConfigDataED;
+import org.anon.smart.smcore.data.SeriesData;
+import org.anon.smart.smcore.data.SeriesDataED;
 import org.anon.smart.smcore.data.FileItemEd;
 import org.anon.smart.smcore.data.FileItem;
 import org.anon.smart.smcore.inbuilt.data.SmartFileObject;
@@ -71,6 +73,7 @@ public class TAtomicity extends Atomicity implements AtomicityConstants
         addDataType(RESPONSE);
         addDataType(MESSAGE);
         addDataType(CONFIG);
+        addDataType(SERIES);
         _context = ctx;
         SmartDataED ed = includeData(_context.primeData());
         ctx.setupPrimeED(ed);
@@ -97,6 +100,26 @@ public class TAtomicity extends Atomicity implements AtomicityConstants
         }
     }
 
+    protected boolean simulate(boolean outcome)
+        throws CtxException
+    {
+        if (outcome)
+        {
+            _context.transaction().simulate();
+            return true;
+        }
+
+        return outcome;
+    }
+
+    @Override
+    protected void rollback()
+        throws CtxException
+    {
+        super.rollback();
+        _context.transaction().rollback();
+    }
+
     protected void ending(boolean outcome)
         throws CtxException
     {
@@ -109,6 +132,7 @@ public class TAtomicity extends Atomicity implements AtomicityConstants
         }
         else
         {
+            System.out.println("TAtomicity: Calling rollback on txn: " + outcome);
             _context.transaction().rollback();
         }
     }
@@ -136,6 +160,15 @@ public class TAtomicity extends Atomicity implements AtomicityConstants
     {
         System.out.println("Including new data: " + data);
         SmartDataED ed = new SmartDataED(data);
+        includeEmpiricalData(ed);
+        return ed;
+    }
+
+    public SeriesDataED includeNewSeries(SeriesData data)
+        throws CtxException
+    {
+        System.out.println("Including new data: " + data);
+        SeriesDataED ed = new SeriesDataED(data);
         includeEmpiricalData(ed);
         return ed;
     }

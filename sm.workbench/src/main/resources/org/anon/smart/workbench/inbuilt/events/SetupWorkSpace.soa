@@ -1,0 +1,4 @@
+name:       SetupWorkSpace
+type:       Message
+flow:       WorkbenchFlow
+postflowadmin: true

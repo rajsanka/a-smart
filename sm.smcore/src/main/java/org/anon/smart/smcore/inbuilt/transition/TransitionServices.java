@@ -184,7 +184,7 @@ public class TransitionServices
         return false;
     }
 
-    public boolean sendEmailService(String to, String subject, String msg)
+    public boolean sendEmailService(String to, String cc, String subject, String msg)
         throws CtxException
     {
         Class cls = EmailConfig.class;
@@ -227,12 +227,16 @@ public class TransitionServices
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(ecfg.getUserName()));
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+            if ((cc != null) && (cc.length() > 0))
+                message.setRecipients(Message.RecipientType.CC, InternetAddress.parse(cc));
             message.setSubject(subject);
             message.setText(msg);
+            System.out.println("Sending: " + to + ":" + subject + ":" + message);
             Transport.send(message);
         } 
         catch (MessagingException err) 
         {
+            err.printStackTrace();
             except().rt(err, new CtxException.Context("Exception", err.getMessage()));
         }
 

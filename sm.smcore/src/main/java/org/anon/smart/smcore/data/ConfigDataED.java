@@ -116,16 +116,16 @@ public class ConfigDataED implements EmpiricalData, TruthData, AtomicityConstant
     public boolean simulate(UUID txnid, EmpiricalData edata)
         throws CtxException
     {
+        System.out.println("accepting config: " + edata);
+        TransitionContext ctx = (TransitionContext)threads().threadContext();
+        assertion().assertNotNull(ctx, "The object is not in an transition context to be accepted.");
+        ctx.transaction().addToTransaction(_data);
         return true;
     }
 
     public boolean accept(UUID txnid, EmpiricalData edata)
         throws CtxException
     {
-        System.out.println("accepting config: " + edata);
-        TransitionContext ctx = (TransitionContext)threads().threadContext();
-        assertion().assertNotNull(ctx, "The object is not in an transition context to be accepted.");
-        ctx.transaction().addToTransaction(_data);
         return true;
     }
 

@@ -53,6 +53,7 @@ public class DefaultMetadata
     public static interface ParameterFinder
     {
         public String getGroup(Class<? extends CacheableObject> datacls);
+        public String getTableName(String gname, Class<? extends CacheableObject> datacls);
     }
 
     public static ParameterFinder FINDER = null;
@@ -67,6 +68,14 @@ public class DefaultMetadata
         if (FINDER != null)
             group = FINDER.getGroup(datacls);
         return group;
+    }
+
+    public static String getTableNameFor(String gname, Class<? extends CacheableObject> datacls)
+    {
+        String tbl = null;
+        if (FINDER != null)
+            tbl = FINDER.getTableName(gname, datacls);
+        return tbl;
     }
 
     public static synchronized boolean createTable(String existsql, String createsql, String gname, String dbname)

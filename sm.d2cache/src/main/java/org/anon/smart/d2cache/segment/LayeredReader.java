@@ -190,9 +190,10 @@ public class LayeredReader implements Reader
         //resultKeys.addAll(keys);
 
         int totsize = 0;
-        System.out.println("Searching for size: " + size + ":" + resultKeys.size());
         if ((pn >= 0) && (ps > 0))
             size = ps;
+
+        System.out.println("Searching for size: " + size + ":" + gotresult.size());
 
         //traverse in the same order, else sort by is wrong
         //if (srchFrom.searchHasOnlyKeys())

@@ -47,5 +47,9 @@ public interface UpdateFuture
 {
     public int[] waitToComplete()
         throws CtxException;
+    public void commit()
+        throws CtxException;
+    public void rollback()
+        throws CtxException;
 }
 

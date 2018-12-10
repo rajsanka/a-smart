@@ -98,6 +98,7 @@ public class PersistableDataHandler<T extends CacheableObject> implements Result
                 ClassTraversal traversal = new ClassTraversal(_dataClass, handler);
                 T data = _dataClass.cast(traversal.traverse());
                 //data.smart___resetNew(); //these objects are not new.
+                System.out.println("PersistableDataHandler: writing read data : " + data);
                 _streamer.writeData(data);
                 count++;
             }

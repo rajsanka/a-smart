@@ -141,14 +141,14 @@ public class SolrRecord extends AbstractStoreRecord implements Constants
             	{
                     usesuffix = LIST_SUFFIXES;
             		fieldPath = fieldPath.replaceAll("."+type, "");
-                    System.out.println("----->Is a multi-value field Indexing:"+type+":"+ctx.field().getType());
+                    //System.out.println("----->Is a multi-value field Indexing:"+type+":"+ctx.field().getType());
             	}
                 String key = _group + PART_SEPARATOR + fieldPath ;
                 Object fldval = ctx.fieldVal();
                 if ((fldval != null) && (usesuffix.containsKey(ctx.field().getType())))
                 {
                     key = key + usesuffix.get(ctx.field().getType());
-                    System.out.println("----->Indexing:"+key+":"+fldval);
+                    //System.out.println("----->Indexing:"+key+":"+fldval);
 
                     //Just read the document and change it and write it back. Doing an update
                     //has a lot of problems esp when there are list items which are new.

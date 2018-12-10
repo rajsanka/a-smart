@@ -254,7 +254,8 @@ public class TranslationStage implements Distillation
         else
         {
             CrossLinkSmartPrimeData dspaceObj = new CrossLinkSmartPrimeData(fldVal);
-            key = dspaceObj.smart___keys().get(1);
+            //Change it to use the natural key. Part of mysql problem.
+            key = dspaceObj.smart___keys().get(0);
         }
         dataObj.put("___smart_action___", "lookup");
         dataObj.put("___smart_value___", key); //TODO passing User key instead of smart_id

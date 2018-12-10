@@ -69,12 +69,12 @@ public class UpdateHandler implements UpdateFuture
         //_objs = objs;
     }
 
-    public UpdateHandler(Future<int[]> future, ConnectionPoolEntity cpe, Collection<CacheObjectData> objs) 
+    public UpdateHandler(ConnectionPoolEntity cpe, Collection<CacheObjectData> objs, boolean update) 
     {
         //this(cpe, objs);
         _future = new ArrayList<Future<int[]>>();
         _entity = cpe;
-        addFuture(future);
+        //addFuture(future);
     }
 
     void addFuture(Future<int[]> future)
@@ -96,6 +96,7 @@ public class UpdateHandler implements UpdateFuture
             {
                 //auto-commit is true.
                 //_entity.getConnection().commit();
+                _entity.closeConnection();
                 _entity.pool().unlockone(_entity);
             }
             _entity = null;
@@ -124,10 +125,51 @@ public class UpdateHandler implements UpdateFuture
         }
         finally
         {
-            release();
+            //release();
         }
 
         return ret;
+    }
+
+    public void commit()
+        throws CtxException
+    {
+        try
+        {
+            if (_entity != null) 
+            {
+                _entity.getConnection().commit();
+            }
+        }
+        catch (Exception e)
+        {
+            except().rt(e, this, new CtxException.Context("UpdateHandler", "commit"));
+        }
+        finally
+        {
+            release();
+        }
+    }
+
+    public void rollback()
+        throws CtxException
+    {
+        try
+        {
+            if (_entity != null) 
+            {
+                System.out.println("Calling rollback for: " + _entity + ":" + _objs);
+                _entity.getConnection().rollback();
+            }
+        }
+        catch (Exception e)
+        {
+            except().rt(e, this, new CtxException.Context("UpdateHandler", "commit"));
+        }
+        finally
+        {
+            release();
+        }
     }
 }
 

@@ -65,7 +65,7 @@ public interface PersistableData extends CacheableObject, java.io.Serializable
     static <T extends CacheableObject> DataMetadata metadata(T obj)
         throws CtxException
     {
-        return DataSchema.metadataFor(obj.getClass(), _globalName, _dbName);
+        return DataSchema.metadataFor(obj.getClass(), globalName(), dbName());
     }
 
     static <T extends CacheableObject> SQLDescriptor updateSQL(T obj, Set<DirtyField> flds, boolean addkey)
@@ -132,7 +132,7 @@ public interface PersistableData extends CacheableObject, java.io.Serializable
     static DataMetadata metadataFor(Class<? extends CacheableObject> cls)
         throws CtxException
     {
-        return DataSchema.metadataFor(cls, _globalName, _dbName);
+        return DataSchema.metadataFor(cls, globalName(), dbName());
     }
 }
 

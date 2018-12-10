@@ -68,4 +68,8 @@ public class RelatedObject implements java.io.Serializable, CacheableObject {
 		// TODO Auto-generated method stub
 		
 	}
+
+    public boolean smart___isNew() {
+        return false;
+    }
 }

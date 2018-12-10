@@ -100,7 +100,12 @@ public class D2CacheScheme {
 
 	public static D2Cache getCache(scheme s, String name, int flags,
 			D2CacheConfig cacheConfig) throws CtxException {
+        System.out.println("Got D2CacheConfig as: " + cacheConfig + ":" + name);
 		D2Cache ret = null;
+        if (cacheConfig == null) {
+            //goes to default
+            return getCache(s, name, flags);
+        }
 		switch (s) {
 		case mem:
 			ret = memoryOnlyCache(name, flags, cacheConfig);

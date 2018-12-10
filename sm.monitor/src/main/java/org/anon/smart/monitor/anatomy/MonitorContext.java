@@ -50,6 +50,7 @@ import static org.anon.utilities.services.ServiceLocator.*;
 import static org.anon.utilities.objservices.ObjectServiceLocator.*;
 
 import org.anon.utilities.anatomy.ModuleContext;
+import org.anon.utilities.anatomy.StartConfig;
 import org.anon.utilities.anatomy.JVMEnvironment;
 import org.anon.utilities.exception.CtxException;
 
@@ -57,6 +58,9 @@ public class MonitorContext implements SmartModuleContext
 {
     public MonitorContext()
     {
+    }
+
+    public void setup(StartConfig cfg) throws CtxException {
     }
 
     public JVMEnvironment vmEnvironment()

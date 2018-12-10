@@ -72,8 +72,7 @@ public class JCSTransaction extends AbstractStoreTransaction
         JCSRecord rec = new JCSRecord(group, primarykey, curr, orig);
         
         //Do We need this for JCS?
-        /*
-        JCSObjectTraversal jot = new JCSObjectTraversal(rec);
+        /*JCSObjectTraversal jot = new JCSObjectTraversal(rec);
         ObjectTraversal ot = new ObjectTraversal(jot, curr, false, null);
         ot.traverse();
         */
@@ -86,16 +85,17 @@ public class JCSTransaction extends AbstractStoreTransaction
     	JCSRecord rec = (JCSRecord)record;
         JCSConnection conn = (JCSConnection)_connection;
         String group = rec.getGroup();
-        Object obj = null;
-        if(rec.getOriginal() != null)
+        Object obj = rec.getStoreObject();
+        /*if(rec.getOriginal() != null)
         	obj = rec.getOriginal();
         else
-        	obj = rec.getModified();
+        	obj = rec.getModified();*/
 	    //Object mod = rec.getModified();
 	    List<Object> keys = rec.getKeys();
 	    for (Object k : keys) {
 			try {
 				if (group != null){
+                    //System.out.println("--->JCSCache: storing: " + k + ":" + group + ":" + obj);
 					conn.cache().putInGroup(k, group, obj);
 				}
 				else

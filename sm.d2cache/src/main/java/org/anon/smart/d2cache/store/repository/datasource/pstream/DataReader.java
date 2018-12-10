@@ -46,6 +46,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.lang.reflect.Field;
 
 import org.anon.smart.d2cache.CacheableObject;
+import org.anon.smart.d2cache.store.repository.datasource.CompiledSQL;
 
 import org.anon.utilities.exception.CtxException;
 import org.anon.utilities.utils.Repeatable;
@@ -59,6 +60,7 @@ public interface DataReader extends Repeatable
         private String _sql;
         private Class<T> _datacls;
         private Set<QueryData> _linked;
+        private CompiledSQL parent;
 
         public QueryData(Class<T> cls, String q)
         {
@@ -82,6 +84,8 @@ public interface DataReader extends Repeatable
             return q;
         }
 
+        public void setParent(CompiledSQL p)  { parent = p; }
+        public CompiledSQL getParent() { return parent; }
         public Set<QueryData> links() { return _linked; }
         public Class<T> dataClass() { return _datacls; }
         public String sql() { return _sql; }

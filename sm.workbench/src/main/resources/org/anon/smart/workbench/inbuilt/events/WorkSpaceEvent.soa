@@ -1,0 +1,4 @@
+name:       WorkSpaceEvent
+type:       Message
+flow:       WorkbenchFlow
+postflowadmin: true

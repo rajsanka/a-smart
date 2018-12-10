@@ -110,6 +110,7 @@ public class ResourceManager implements DSErrorCodes
                 {
                     Class.forName(_config.getDriver());
                     _connection = DriverManager.getConnection(_config.getURI(), _config.getUser(), _config.getPwd());
+                    _connection.setAutoCommit(false);
                     _isConnected = true;
                 }
 
@@ -121,6 +122,24 @@ public class ResourceManager implements DSErrorCodes
             }
 
             return null;
+        }
+
+        public void closeConnection()
+        {
+            try
+            {
+                if (_isConnected && (_connection != null))
+                {
+                    _isConnected = false;
+                    _connection.close();
+                    _connection = null;
+                }
+            }
+            catch (Exception e)
+            {
+                //except().rt(e, this, new CtxException.Context("ResourceManager", "getConnection"));
+                e.printStackTrace();
+            }
         }
 
         public PoolEntity nextEntity() { return _next; }

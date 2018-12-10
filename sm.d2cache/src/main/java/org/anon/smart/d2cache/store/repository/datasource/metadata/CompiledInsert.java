@@ -62,7 +62,7 @@ public class CompiledInsert extends AbstractSQL
     {
         Field fld = meta.attributeField();
         //in this case we need to have this inserted?
-        if (meta.relatedVia() == null)
+        if ((meta.relatedVia() == null) || (meta.isBackwardReference()))
         {
             _attributes.add(meta.columnName());
         }

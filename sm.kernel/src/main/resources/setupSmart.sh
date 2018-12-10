@@ -79,11 +79,11 @@ echo "[Retrieving dependant jars. This may take sometime plase wait. ***********
 wget_url http://repo1.maven.org/maven2/log4j/log4j/1.2.16/log4j-1.2.16.jar lib/log4j/log4j/1.2.16/log4j-1.2.16.jar
 wget_url http://repo1.maven.org/maven2/jcs/jcs/1.3/jcs-1.3.jar lib/jcs/jcs/1.3/jcs-1.3.jar
 wget_url http://repo1.maven.org/maven2/org/yaml/snakeyaml/1.5/snakeyaml-1.5.jar lib/org/yaml/snakeyaml/1.5/snakeyaml-1.5.jar
-wget_url http://repo1.maven.org/maven2/org/ow2/asm/asm/4.1/asm-4.1.jar lib/org/ow2/asm/asm/4.1/asm-4.1.jar
-wget_url http://repo1.maven.org/maven2/org/ow2/asm/asm-tree/4.1/asm-tree-4.1.jar lib/org/ow2/asm/asm-tree/4.1/asm-tree-4.1.jar
-wget_url http://repo1.maven.org/maven2/org/ow2/asm/asm-commons/4.1/asm-commons-4.1.jar lib/org/ow2/asm/asm-commons/4.1/asm-commons-4.1.jar
-wget_url http://repo1.maven.org/maven2/org/ow2/asm/asm-util/4.1/asm-util-4.1.jar lib/org/ow2/asm/asm-util/4.1/asm-util-4.1.jar
-wget_url http://repo1.maven.org/maven2/org/ow2/asm/asm-analysis/4.1/asm-analysis-4.1.jar lib/org/ow2/asm/asm-analysis/4.1/asm-analysis-4.1.jar
+wget_url http://repo1.maven.org/maven2/org/ow2/asm/asm/5.0.3/asm-5.0.3.jar lib/org/ow2/asm/asm/5.0.3/asm-5.0.3.jar
+wget_url http://repo1.maven.org/maven2/org/ow2/asm/asm-tree/5.0.3/asm-tree-5.0.3.jar lib/org/ow2/asm/asm-tree/5.0.3/asm-tree-5.0.3.jar
+wget_url http://repo1.maven.org/maven2/org/ow2/asm/asm-commons/5.0.3/asm-commons-5.0.3.jar lib/org/ow2/asm/asm-commons/5.0.3/asm-commons-5.0.3.jar
+wget_url http://repo1.maven.org/maven2/org/ow2/asm/asm-util/5.0.3/asm-util-5.0.3.jar lib/org/ow2/asm/asm-util/5.0.3/asm-util-5.0.3.jar
+wget_url http://repo1.maven.org/maven2/org/ow2/asm/asm-analysis/5.0.3/asm-analysis-5.0.3.jar lib/org/ow2/asm/asm-analysis/5.0.3/asm-analysis-5.0.3.jar
 wget_url http://repo1.maven.org/maven2/org/springframework/spring-core/3.0.5.RELEASE/spring-core-3.0.5.RELEASE.jar lib/org/springframework/spring-core/3.0.5.RELEASE/spring-core-3.0.5.RELEASE.jar
 wget_url http://repo1.maven.org/maven2/org/springframework/spring-asm/3.0.5.RELEASE/spring-asm-3.0.5.RELEASE.jar lib/org/springframework/spring-asm/3.0.5.RELEASE/spring-asm-3.0.5.RELEASE.jar
 wget_url http://repo1.maven.org/maven2/commons-logging/commons-logging/1.1/commons-logging-1.1.jar lib/commons-logging/commons-logging/1.1/commons-logging-1.1.jar
@@ -141,6 +141,15 @@ wget_url http://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.39/mysql-c
 wget_url http://repo1.maven.org/maven2/commons-dbutils/commons-dbutils/1.6/commons-dbutils-1.6.jar lib/commons-dbutils/commons-dbutils/1.6/commons-dbutils-1.6.jar
 wget_url http://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/gson-2.7.jar lib/com/google/code/gson/gson/2.7/gson-2.7.jar
 
+echo "[Copying drools jars *************************************************************]"
+wget_url http://repo1.maven.org/maven2/org/drools/drools-core/6.5.0.Final/drools-core-6.5.0.Final.jar lib/org/drools/drools-core/6.5.0.Final/drools-core-6.5.0.Final.jar
+wget_url http://repo1.maven.org/maven2/org/kie/kie-api/6.5.0.Final/kie-api-6.5.0.Final.jar lib/org/kie/kie-api/6.5.0.Final/kie-api-6.5.0.Final.jar
+wget_url http://repo1.maven.org/maven2/org/kie/kie-internal/6.5.0.Final/kie-internal-6.5.0.Final.jar lib/org/kie/kie-internal/6.5.0.Final/kie-internal-6.5.0.Final.jar
+wget_url http://repo1.maven.org/maven2/org/drools/drools-compiler/6.5.0.Final/drools-compiler-6.5.0.Final.jar lib/org/drools/drools-compiler/6.5.0.Final/drools-compiler-6.5.0.Final.jar
+wget_url http://repo1.maven.org/maven2/org/mvel/mvel2/2.2.8.Final/mvel2-2.2.8.Final.jar lib/org/mvel/mvel2/2.2.8.Final/mvel2-2.2.8.Final.jar
+wget_url http://repo1.maven.org/maven2/org/eclipse/jdt/core/compiler/ecj/4.4.2/ecj-4.4.2.jar lib/org/eclipse/jdt/core/compiler/ecj/4.4.2/ecj-4.4.2.jar
+wget_url http://repo1.maven.org/maven2/org/antlr/antlr-runtime/3.5/antlr-runtime-3.5.jar lib/org/antlr/antlr-runtime/3.5/antlr-runtime-3.5.jar
+wget_url http://repo1.maven.org/maven2/org/jsoup/jsoup/1.11.3/jsoup-1.11.3.jar lib/org/jsoup/jsoup/1.11.3/jsoup-1.11.3.jar
 
 
 echo "[Copying smart jars **************************************************************]"
@@ -180,7 +189,9 @@ mkdir config
 echo "[Setting up environment ********]"
 echo "export SMART_PATH=$1" > setupEnv.sh
 echo "export SMART_LIB_PATH=$1/lib" >> setupEnv.sh
-echo "export SMART_VERSION=$SMARTVER" >> setupEnv.sh
+#echo "export SMART_VERSION=$SMARTVER" >> setupEnv.sh
+#for now till we deploy this version
+echo "export SMART_VERSION=3.3-SNAPSHOT" >> setupEnv.sh
 echo "export JAVA_HOME=$3" >> setupEnv.sh
 chmod +x setupEnv.sh
 echo "[Setting up environment completed with creating setupEnv ********]"

@@ -49,7 +49,7 @@ import org.anon.utilities.exception.CtxException;
 
 public interface TransactDSpace extends DSpace
 {
-    public D2CacheTransaction startTransaction(UUID id,boolean isFsTransaction)
+    public D2CacheTransaction startTransaction(UUID id, boolean isFsTransaction, boolean noncache)
         throws CtxException;
 }
 

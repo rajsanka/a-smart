@@ -79,7 +79,7 @@ public class ServerSSLContext
         try
         {
             SSLContext serverContext;
-            KeyStore ks = KeyStore.getInstance("JKS");
+            KeyStore ks = KeyStore.getInstance("PKCS12");
             InputStream is = this.getClass().getClassLoader().getResourceAsStream(_keyStoreFile);
             ks.load(is, _keyStorePwd.toCharArray());
 

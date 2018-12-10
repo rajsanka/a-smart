@@ -44,6 +44,7 @@ package org.anon.smart.smcore.test;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.anon.smart.d2cache.D2CacheConfig;
 import org.anon.smart.channels.shell.ExternalConfig;
 import org.anon.smart.smcore.channel.server.EventServerConfig;
 import org.anon.smart.smcore.anatomy.SMCoreConfig;
@@ -79,6 +80,10 @@ public class TestStartConfig extends BaseStartConfig implements SMCoreConfig
     public boolean initTenants()
     {
         return false; //will be initialized by smcore
+    }
+
+    public D2CacheConfig repository() {
+        return null;
     }
 }
 

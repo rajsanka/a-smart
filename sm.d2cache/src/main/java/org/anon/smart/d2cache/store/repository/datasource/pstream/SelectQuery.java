@@ -58,6 +58,31 @@ import static org.anon.utilities.services.ServiceLocator.*;
 
 public class SelectQuery<T extends CacheableObject> implements DSErrorCodes
 {
+    private enum operators 
+    { 
+        eq("="), gt(">"), lt("<"), like("LIKE");
+
+        private String operator;
+        private operators(String oper)
+        {
+            operator = oper;
+        }
+
+        String getOperator() { return operator; }
+
+        static operators getOperator(String operstr)
+        {
+            for (operators oper : values())
+            {
+                if (oper.operator.equals(operstr))
+                {
+                    return oper;
+                }
+            }
+
+            return null;
+        }
+    }
     public class Condition
     {
         Conditions belongTo;
@@ -76,7 +101,7 @@ public class SelectQuery<T extends CacheableObject> implements DSErrorCodes
             attr = col;
             table = tbl;
             AttributeMetadata attribute = meta.metadataFor(col);
-            assertion().assertNotNull(attribute, this, INVALID_ATTRIBUTE, "The attribute is not present");
+            assertion().assertNotNull(attribute, this, INVALID_ATTRIBUTE, "The attribute is not present: " + tbl + ":" + col + ":" + meta.table());
             colName = attribute.columnName();
             sqlFragment = null;
         }
@@ -93,16 +118,42 @@ public class SelectQuery<T extends CacheableObject> implements DSErrorCodes
             belongTo.addValue(val);
         }
 
+        public Conditions add(String oper, Object val)
+        {
+            operators operator = operators.getOperator(oper);
+            if (operator == null) operator = operators.eq;
+            switch(operator)
+            {
+                case eq:
+                default:
+                    this.eq(val);
+                    break;
+
+                case gt:
+                    this.gt(val);
+                    break;
+
+                case lt:
+                    this.lt(val);
+                    break;
+             
+                case like:
+                    this.like(val.toString());
+                    break;
+            }
+            return belongTo;
+        }
+
         public Conditions eq(Object val)
         {
-            oper = " = ";
+            oper = " " + operators.eq.getOperator() + " ";
             setValue(val);
             return belongTo;
         }
 
         public Conditions like(String val)
         {
-            oper = " LIKE ";
+            oper = " " + operators.like.getOperator() + " ";
             val = val.replaceAll("\\*", "\\%");
             setValue(val);
             return belongTo;
@@ -110,14 +161,14 @@ public class SelectQuery<T extends CacheableObject> implements DSErrorCodes
 
         public Conditions gt(Object val)
         {
-            oper = " > ";
+            oper = " " + operators.gt.getOperator() + " ";
             setValue(val);
             return belongTo;
         }
 
         public Conditions lt(Object val)
         {
-            oper = " < ";
+            oper = " " + operators.lt.getOperator() + " ";
             setValue(val);
             return belongTo;
         }
@@ -245,9 +296,12 @@ public class SelectQuery<T extends CacheableObject> implements DSErrorCodes
     {
         AttributeMetadata rel = subattr.referencedAttribute();
         String sql = subattr.linkSQL().sql();
+        if (parent.getParent() != null) //though this can go any levels, the linkSQL goes only 2 levels.
+            sql = subattr.linkSQL().sql(parent.getParent());
         sql += " AND " + where + " ORDER BY " + rel.columnName() ;
 
         QueryData q = parent.addLink(subattr.attributeName(), rel.attributeField(), subattr.attributeType(), sql);
+        q.setParent(subattr.linkSQL());
 
         AttributeMetadata[] sub = subattr.associatedMetadata().subAttributes();
         for (int i = 0; (sub != null) && (i < sub.length); i++)

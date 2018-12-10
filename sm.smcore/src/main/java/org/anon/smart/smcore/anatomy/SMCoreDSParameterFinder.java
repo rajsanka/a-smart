@@ -42,6 +42,7 @@
 package org.anon.smart.smcore.anatomy;
 
 import org.anon.smart.d2cache.CacheableObject;
+import org.anon.smart.base.tenant.CrossLinkSmartTenant;
 import org.anon.smart.d2cache.store.repository.datasource.metadata.DefaultMetadata.ParameterFinder;
 
 import static org.anon.smart.base.utils.AnnotationUtils.*;
@@ -73,6 +74,47 @@ public class SMCoreDSParameterFinder implements ParameterFinder
             e.printStackTrace();
         }
         return ret;
+    }
+
+    public String getTableName(String gname, Class<? extends CacheableObject> datacls)
+    {
+        String tbl = null;
+        try
+        {
+            //if (datacls.getSimpleName().equals("FlowAdmin") || datacls.getSimpleName().equals("TenantAdmin"))
+            if (datacls.getSimpleName().equals("TenantAdmin"))
+                return tbl; //let it vary with different flows
+
+            String group = className(datacls);
+            String flow = flowFor(datacls);
+            if (group == null)
+                group = datacls.getSimpleName();
+
+            CrossLinkSmartTenant tenant = CrossLinkSmartTenant.currentTenant();
+            if (tenant.link() != null)
+            {
+                String name = tenant.getName();
+                if (flow != null)
+                    tbl = name + "_" + flow + "__" + group;
+                else
+                    tbl = name + "__" + group;
+            }
+            else
+            {
+
+                String[] tokens = gname.split("\\-");
+                if (flow != null)
+                    tbl = tokens[0] + "_" + flow + "__" + group;
+                else
+                    tbl = tokens[0] + "__" + group;
+            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return tbl;
     }
 }
 

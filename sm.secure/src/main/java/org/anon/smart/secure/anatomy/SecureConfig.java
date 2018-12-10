@@ -41,10 +41,15 @@
 
 package org.anon.smart.secure.anatomy;
 
+import org.anon.smart.d2cache.D2CacheConfig;
 import org.anon.utilities.anatomy.StartConfig;
+import org.anon.utilities.exception.CtxException;
 
 public interface SecureConfig extends StartConfig
 {
     public boolean firstJVM();
+
+    public D2CacheConfig repository()
+        throws CtxException;
 }
 

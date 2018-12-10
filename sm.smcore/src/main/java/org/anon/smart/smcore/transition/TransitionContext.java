@@ -144,7 +144,7 @@ public class TransitionContext extends AbstractGraphContext implements CThreadCo
 
     public String extras()
     {
-        return "null";
+        return _event.smart___name();
     }
 
     public void modifyToState(String state)

@@ -41,6 +41,8 @@
 
 package org.anon.smart.d2cache.store.repository.datasource.metadata;
 
+import org.anon.smart.d2cache.store.repository.datasource.CompiledSQL;
+
 public class CompiledLinkSelect extends CompiledSelect
 {
     private String _parentTable;
@@ -62,6 +64,18 @@ public class CompiledLinkSelect extends CompiledSelect
         String pre = super.prefix();
         String post = " FROM " + _table + " , " + _parentTable + 
             " WHERE " + _joinClause;
+        return pre + " " + listToString(",") + " " + post;
+    }
+
+    @Override
+    public String sql(CompiledSQL p)
+    {
+        CompiledLinkSelect parent = (CompiledLinkSelect)p;
+        //third level sub select. Do we want to make it infinites levels???
+        _count = _attributes.size();
+        String pre = super.prefix();
+        String post = " FROM " + _table + " , " + _parentTable + " , " + parent._parentTable + 
+            " WHERE " + _joinClause + " AND " + parent._joinClause;
         return pre + " " + listToString(",") + " " + post;
     }
 }

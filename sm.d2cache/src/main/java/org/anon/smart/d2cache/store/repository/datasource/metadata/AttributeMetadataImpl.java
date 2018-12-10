@@ -77,6 +77,9 @@ public class AttributeMetadataImpl implements AttributeMetadata
     private AbstractSQL _subSQL;
     private String _fieldpath;
 
+    private boolean _backwardReference;
+    private Class _backReferenceClass;
+
     public AttributeMetadataImpl(String nm, String colnm, Class cls, Field fld) 
     {
         _name = nm;
@@ -87,6 +90,7 @@ public class AttributeMetadataImpl implements AttributeMetadata
         _fld = fld;
         _relatedTo = new HashSet<AttributeMetadata>();
         _storeJSON = false;
+        _backwardReference = false;
     }
 
     public AttributeMetadataImpl(String nm, Class cls, Field fld) 
@@ -124,6 +128,18 @@ public class AttributeMetadataImpl implements AttributeMetadata
 
             String reftbl = _refMetadata.table();
             _referenceColumnName = refcol;
+            AttributeMetadata refmeta = _refMetadata.metadataFor(refcol);
+            if (refmeta == null)
+            {
+                //this is backward reference. The key of that table needs to be here
+                _referenceColumnName = _refMetadata.key();
+                refmeta = _refMetadata.metadataFor(_referenceColumnName);
+                _colName = _name; //store in the column name the backward reference
+                _setterSQL = _colName + " = ? ";
+                _backwardReference = true;
+                _backReferenceClass = refmeta.attributeType();
+            }
+
             _joinSQL = tbl + "." + _colName + " = " +  reftbl + "." + _referenceColumnName;
 
             CompiledSelect select = (CompiledSelect)_refMetadata.compiled(DataMetadata.sqltypes.selsql);
@@ -140,6 +156,8 @@ public class AttributeMetadataImpl implements AttributeMetadata
     public Field attributeField() { return _fld; }
     public String joinClause() { return _joinSQL; }
     public String fieldpath() { return _fieldpath; }
+    public boolean isBackwardReference() { return _backwardReference; }
+    public Class backReferenceType() { return _backReferenceClass; }
 
     public void addRelatedTo(AttributeMetadata meta) { _relatedTo.add(meta); }
     public Collection<AttributeMetadata> relatedTo() { return _relatedTo; }

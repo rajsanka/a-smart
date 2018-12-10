@@ -1,7 +1,7 @@
 name:       AuthenticateUser
 type:       Transition
 flow:       Security
-foreach:        FlowAdmin|Authenticate,Session|Logout,FlowAdmin|GetPermittedFeatures
+foreach:        FlowAdmin|Authenticate,Session|Logout,FlowAdmin|GetPermittedFeatures,Session|SessionValid
 actions:
     - name:     authenticateUser
       method:   authenticateUser
@@ -16,5 +16,10 @@ actions:
     - name:     permittedFeatures
       method:   permittedFeatures
       foreach:  FlowAdmin|GetPermittedFeatures
+      from:     active
+      to:       active
+    - name:     validSession
+      method:   validSession
+      foreach:  Session|SessionValid
       from:     active
       to:       active

@@ -52,10 +52,10 @@ public class SearchEvent implements Serializable {
     private String sortBy = null;
     private boolean ascending = true;
 
-	private Map<String, String> queryMap;
+	private Map<String, Object> queryMap;
 	public SearchEvent(){}
 	
-	public Map<String, String> getQueryMap() { return queryMap; }
+	public Map<String, Object> getQueryMap() { return queryMap; }
 	public String getGroup() { return group; }
     public long getSize() { if (size == 0) return -1; else return size; } //return all
 

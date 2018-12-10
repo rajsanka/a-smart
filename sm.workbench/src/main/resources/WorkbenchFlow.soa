@@ -1,0 +1,43 @@
+name:   WorkbenchFlow
+defaultEnable:  all
+primeData:
+    - org.anon.smart.workbench.data.WorkSpace
+    - org.anon.smart.workbench.data.WorkSpaceConfig
+events:
+    - org.anon.smart.workbench.inbuilt.events.CreateWorkSpaceFromTemplate
+    - org.anon.smart.workbench.inbuilt.events.GetWorkSpaceTemplates
+messages:
+    - org.anon.smart.workbench.inbuilt.events.WorkSpaceEvent
+    - org.anon.smart.workbench.inbuilt.events.RefreshWorkSpace
+    - org.anon.smart.workbench.inbuilt.events.SetupWorkSpace
+responses:
+    - org.anon.smart.workbench.inbuilt.responses.WSConfigData
+    - org.anon.smart.workbench.inbuilt.responses.WorkSpaceMessage
+transitions:
+    - org.anon.smart.workbench.inbuilt.transitions.WorkbenchEventHandler
+keys:
+    - data: org.anon.smart.workbench.data.WorkSpace
+      key: name
+    - data: org.anon.smart.workbench.data.WorkSpaceConfig
+      key: configId
+features:
+    - name: all
+      artefacts:
+        - org.anon.smart.workbench.data.WorkSpace
+        - org.anon.smart.workbench.data.WorkSpaceConfig
+        - org.anon.smart.workbench.inbuilt.events.CreateWorkSpaceFromTemplate
+        - org.anon.smart.workbench.inbuilt.events.GetWorkSpaceTemplates
+        - org.anon.smart.workbench.inbuilt.events.WorkSpaceEvent
+        - org.anon.smart.workbench.inbuilt.events.RefreshWorkSpace
+        - org.anon.smart.workbench.inbuilt.events.SetupWorkSpace
+        - org.anon.smart.workbench.inbuilt.responses.WSConfigData
+        - org.anon.smart.workbench.inbuilt.responses.WorkSpaceMessage
+        - org.anon.smart.workbench.inbuilt.transitions.WorkbenchEventHandler
+security:
+    - name: internalaccess
+      parms: WorkSpaceEvent,RefreshWorkSpace,SetupWorkSpace
+      guardtype: unauthenticated
+links:
+    - from: org.anon.smart.workbench.data.WorkSpaceConfig.configId
+      to: org.anon.smart.workbench.data.WorkSpace.configId
+

@@ -1,0 +1,30 @@
+name:       WorkbenchEventHandler
+type:       Transition
+flow:       WorkbenchFlow
+foreach:        FlowAdmin|GetWorkSpaceTemplates,FlowAdmin|CreateWorkSpaceFromTemplate,FlowAdmin|WorkSpaceEvent,WorkSpace|RefreshWorkSpace,FlowAdmin|SetupWorkSpace
+actions:
+    - name:     getWorkSpaceTemplates
+      method:   getWorkSpaceTemplates
+      foreach:  FlowAdmin|GetWorkSpaceTemplates
+      from:     active
+      to:       active
+    - name:     createWorkSpaceFromTemplate
+      method:   createWorkSpaceFromTemplate
+      foreach:  FlowAdmin|CreateWorkSpaceFromTemplate
+      from:     active
+      to:       active
+    - name:     handleWorkSpaceEvent
+      method:   handleWorkSpaceEvent
+      foreach:  FlowAdmin|WorkSpaceEvent
+      from:     active
+      to:       active
+    - name:     refreshWorkSpace
+      method:   refreshWorkSpace
+      foreach:  WorkSpace|RefreshWorkSpace
+      from:     active
+      to:       active
+    - name:     setupWorkSpace
+      method:   setupWorkSpace
+      foreach:  FlowAdmin|SetupWorkSpace
+      from:     active
+      to:       active

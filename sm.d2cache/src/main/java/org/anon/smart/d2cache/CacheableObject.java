@@ -45,4 +45,7 @@ import org.anon.utilities.exception.CtxException;
 
 public interface CacheableObject {
 	public void smart___initOnLoad() throws CtxException;
+
+    public boolean smart___isNew()
+        throws CtxException;
 }

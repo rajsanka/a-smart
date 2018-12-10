@@ -8,7 +8,7 @@ then
     export SMART_PATH=$HOME/.m2/repository/
 #    export SMART_LIB_PATH=$SMART_PATH/lib
     export SMART_LIB_PATH=$SMART_PATH/
-    export SMART_VERSION=2.2-SNAPSHOT
+    export SMART_VERSION=3.3-SNAPSHOT
 fi
 
 if [ -f setupEnv.sh ];
@@ -19,7 +19,9 @@ fi
 ###############
 #add classpaths to this
 #################
-CLASSPATH="$SMART_LIB_PATH/org/anon/utilities/utilities/$SMART_VERSION/utilities-$SMART_VERSION.jar:"
+CLASSPATH="config/:";
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/config/:";
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/anon/utilities/utilities/$SMART_VERSION/utilities-$SMART_VERSION.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/anon/smart/sm.kernel/$SMART_VERSION/sm.kernel-$SMART_VERSION.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/anon/smart/sm.smcore/$SMART_VERSION/sm.smcore-$SMART_VERSION.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/anon/smart/sm.base/$SMART_VERSION/sm.base-$SMART_VERSION.jar:"
@@ -31,6 +33,7 @@ CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/anon/smart/sm.generator/$SMART_VERSION/
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/anon/smart/sm.template/$SMART_VERSION/sm.template-$SMART_VERSION.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/anon/smart/sm.codegen/$SMART_VERSION/sm.codegen-$SMART_VERSION.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/anon/smart/sm.secure/$SMART_VERSION/sm.secure-$SMART_VERSION.jar:"
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/anon/smart/sm.workbench/$SMART_VERSION/sm.workbench-$SMART_VERSION.jar:"
 
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/io/netty/netty/3.6.5.Final/netty-3.6.5.Final.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/concurrent/concurrent/1.0/concurrent-1.0.jar:"
@@ -38,11 +41,11 @@ CLASSPATH="$CLASSPATH$SMART_LIB_PATH/concurrent/concurrent/1.0/concurrent-1.0.ja
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/log4j/log4j/1.2.16/log4j-1.2.16.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/jcs/jcs/1.3/jcs-1.3.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/yaml/snakeyaml/1.5/snakeyaml-1.5.jar:"
-CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/ow2/asm/asm/4.1/asm-4.1.jar:"
-CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/ow2/asm/asm-tree/4.1/asm-tree-4.1.jar:"
-CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/ow2/asm/asm-commons/4.1/asm-commons-4.1.jar:"
-CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/ow2/asm/asm-util/4.1/asm-util-4.1.jar:"
-CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/ow2/asm/asm-analysis/4.1/asm-analysis-4.1.jar:"
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/ow2/asm/asm/5.0.3/asm-5.0.3.jar:"
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/ow2/asm/asm-tree/5.0.3/asm-tree-5.0.3.jar:"
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/ow2/asm/asm-commons/5.0.3/asm-commons-5.0.3.jar:"
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/ow2/asm/asm-util/5.0.3/asm-util-5.0.3.jar:"
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/ow2/asm/asm-analysis/5.0.3/asm-analysis-5.0.3.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/apache/commons/commons-javaflow/1.0-SNAPSHOT/commons-javaflow-1.0-SNAPSHOT.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/springframework/spring-core/3.0.5.RELEASE/spring-core-3.0.5.RELEASE.jar:"
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/springframework/spring-asm/3.0.5.RELEASE/spring-asm-3.0.5.RELEASE.jar:"
@@ -97,10 +100,19 @@ CLASSPATH="$CLASSPATH$SMART_LIB_PATH/javax/mail/mail/1.4/mail-1.4.jar:";
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/mysql/mysql-connector-java/5.1.39/mysql-connector-java-5.1.39.jar:";
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/commons-dbutils/commons-dbutils/1.6/commons-dbutils-1.6.jar:";
 CLASSPATH="$CLASSPATH$SMART_LIB_PATH/com/google/code/gson/gson/2.7/gson-2.7.jar:";
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/drools/drools-core/6.5.0.Final/drools-core-6.5.0.Final.jar:";
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/kie/kie-api/6.5.0.Final/kie-api-6.5.0.Final.jar:";
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/kie/kie-internal/6.5.0.Final/kie-internal-6.5.0.Final.jar:";
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/drools/drools-compiler/6.5.0.Final/drools-compiler-6.5.0.Final.jar:";
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/mvel/mvel2/2.2.8.Final/mvel2-2.2.8.Final.jar:";
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/eclipse/jdt/core/compiler/ecj/4.4.2/ecj-4.4.2.jar:";
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/antlr/antlr-runtime/3.5/antlr-runtime-3.5.jar:";
+CLASSPATH="$CLASSPATH$SMART_LIB_PATH/org/jsoup/jsoup/1.11.3/jsoup-1.11.3.jar:";
 
 #java  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$SMART_PATH/heapDumps  -DSmart.Codegen.DumpPath=/smartcodegenjars/codegen/smartdump -cp $CLASSPATH org.anon.smart.kernel.SmartKernel $1 yes
 echo $CLASSPATH
-nohup java  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$SMART_PATH/heapDumps  -DSmart.Codegen.DumpPath=/smartcodegenjars/codegen/smartdump -cp $CLASSPATH org.anon.smart.kernel.SmartKernel $1 yes &
+#nohup java  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$SMART_PATH/heapDumps  -DSmart.Codegen.DumpPath=/smartcodegenjars/codegen/smartdump -cp $CLASSPATH org.anon.smart.kernel.SmartKernel $1 yes &
+java  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$SMART_PATH/heapDumps  -DSmart.Codegen.DumpPath=/smartcodegenjars/codegen/smartdump -cp $CLASSPATH org.anon.smart.kernel.SmartKernel $1 yes > nohup.out 2>&1 &
 echo $! > smartkernel.pid
 
 #for development mode i.e. no hadoop

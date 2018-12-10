@@ -42,6 +42,7 @@
 package org.anon.smart.smcore.anatomy;
 
 import org.anon.smart.channels.shell.ExternalConfig;
+import org.anon.smart.d2cache.D2CacheConfig;
 
 import org.anon.utilities.anatomy.StartConfig;
 import org.anon.utilities.exception.CtxException;
@@ -51,5 +52,8 @@ public interface SMCoreConfig extends StartConfig
     public ExternalConfig[] startChannels()
         throws CtxException;
     public boolean firstJVM();
+
+    public D2CacheConfig repository()
+        throws CtxException;
 }
 

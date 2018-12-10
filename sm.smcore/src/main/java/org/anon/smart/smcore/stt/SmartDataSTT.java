@@ -68,7 +68,8 @@ import static org.anon.utilities.objservices.ObjectServiceLocator.*;
 
 public class SmartDataSTT implements SmartData, DSpaceObject
 {
-    private FiniteState ___smart_currentState___;
+    private String ___smart_state___;
+    private transient FiniteState ___smart_currentState___;
     private DataLegend ___smart_legend___;
     private transient String ___smart_name___;
     private transient boolean ___smart_isNew___;
@@ -126,7 +127,7 @@ public class SmartDataSTT implements SmartData, DSpaceObject
 
     public String smart___group()
     {
-        System.out.println("Getting group as: " + ___smart_legend___.group());
+        //System.out.println("Getting group as: " + ___smart_legend___.group());
         return ___smart_legend___.group();
     }
 
@@ -157,10 +158,16 @@ public class SmartDataSTT implements SmartData, DSpaceObject
     public void utilities___setCurrentState(FiniteState state)
     {
         ___smart_currentState___ = state;
+        ___smart_state___ = state.stateName();
+        System.out.println("Setting the current state as: " + state + ":" + ___smart_state___);
     }
 
     public FiniteState utilities___currentState()
+        throws CtxException
     {
+        if ((___smart_currentState___ == null) || (!___smart_currentState___.stateName().equals(___smart_state___)))
+            smart___transition(___smart_state___); //set it back to the current state
+        System.out.println("Returing the current state as: " + ___smart_currentState___ + ":" + ___smart_state___);
         return ___smart_currentState___;
     }
 
@@ -185,12 +192,12 @@ public class SmartDataSTT implements SmartData, DSpaceObject
         assertion().assertNotNull(keys, "No keys defined for SmartData. Error.");
         assertion().assertTrue((keys.length > 0), "No keys defined for SmartData. Error.");
         List<Object> ret = new ArrayList<Object>();
-        ret.add(smart___id());
         for (int i = 0; i < keys.length; i++)
         {
             assertion().assertNotNull(keys[i], "Key Value:  cannot be null. ");
             ret.add(keys[i]);
         }
+        ret.add(smart___id());
 
         return ret;
     }
@@ -223,9 +230,13 @@ public class SmartDataSTT implements SmartData, DSpaceObject
 
 	@Override
 	public void smart___initOnLoad() throws CtxException {
-        String statename = ___smart_currentState___.stateName();
+        //String statename = ___smart_currentState___.stateName();
+        System.out.println("Initializing on load. Got state as: " + ___smart_state___);
+        String state = ___smart_state___;
 		startFSM();
-        smart___transition(statename); //set it back to the stored state
+        ___smart_state___ = state;
+        smart___transition(state); //set it back to the stored state
+        smart___setIsNew(false);
 		if(this instanceof SmartPrimeData)
 			((SmartPrimeData)this).initPrimeObject();
 		

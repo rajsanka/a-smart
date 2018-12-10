@@ -42,6 +42,7 @@
 
 package org.anon.smart.smcore.test.channel.tcp;
 
+import org.anon.smart.d2cache.D2CacheConfig;
 import org.anon.smart.base.test.testanatomy.BaseStartConfig;
 import org.anon.smart.channels.shell.ExternalConfig;
 import org.anon.smart.smcore.anatomy.SMCoreConfig;
@@ -80,6 +81,10 @@ public class TestStartTCPConfig extends BaseStartConfig implements SMCoreConfig
     public boolean initTenants()
     {
         return false; //will be initialized by smcore
+    }
+
+    public D2CacheConfig repository() {
+        return null;
     }
 }
 

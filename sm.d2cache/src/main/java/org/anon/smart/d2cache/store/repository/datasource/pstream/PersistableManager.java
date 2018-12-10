@@ -70,8 +70,46 @@ import static org.anon.utilities.services.ServiceLocator.*;
 
 public class PersistableManager implements AutoCloseable, DSErrorCodes
 {
-    public static String _globalName = "";
-    public static String _dbName = "";
+    static class GlobalThreadLocals
+    {
+        private static final ThreadLocal<GlobalThreadLocals> LOCALS = new ThreadLocal<GlobalThreadLocals>();
+
+        private String _globalName = "";
+        private String _dbName = "";
+
+        static void setGlobals(String gname, String dbname)
+        {
+            GlobalThreadLocals gt = LOCALS.get();
+            if (gt == null)
+            {
+                gt = new GlobalThreadLocals();
+            }
+            gt._globalName = gname;
+            gt._dbName = dbname;
+            LOCALS.set(gt);
+        }
+
+        static String getGlobalName()
+        {
+            GlobalThreadLocals gt = LOCALS.get();
+            if (gt != null)
+                return gt._globalName;
+
+            return "";
+        }
+
+        static String getDBName()
+        {
+            GlobalThreadLocals gt = LOCALS.get();
+            if (gt != null)
+                return gt._dbName;
+
+            return "";
+        }
+    }
+
+    public static String globalName() { return GlobalThreadLocals.getGlobalName(); }
+    public static String dbName() { return GlobalThreadLocals.getDBName(); }
 
     @FunctionalInterface
     public static interface RepeatParams extends RepeaterVariants
@@ -198,12 +236,19 @@ public class PersistableManager implements AutoCloseable, DSErrorCodes
         public boolean isNew() { return _isNew; }
         public void resetNew() { _isNew = false; }
         public Object[] getKeys() { return _keys; }
+        public Class getObjectClass() 
+        { 
+            if (_object != null) return _object.getClass();
+
+            return null;
+        }
     }
 
     private Map<CacheObjectKey, CacheObjectData> _currentObjects;
     private DataReader _streamReader;
     private DataWriter _streamWriter;
     private String _gname;
+    private String _dbname;
 
     public PersistableManager(String dbname, String gname) 
         throws CtxException
@@ -218,8 +263,8 @@ public class PersistableManager implements AutoCloseable, DSErrorCodes
         _streamReader = impl.getReader(dbname);
         _streamWriter = impl.getWriter(dbname);
         _gname = gname;
-        _globalName = gname;
-        _dbName = dbname;
+        _dbname = dbname;
+        GlobalThreadLocals.setGlobals(gname, dbname);
     }
 
     public PersistableManager(ConnectionPoolEntity cpe)
@@ -305,14 +350,19 @@ public class PersistableManager implements AutoCloseable, DSErrorCodes
         try
         {
             CacheableObject[] add = openupData(obj, ofld);
+            CacheableObject[] addorig = new CacheableObject[0];
+            if (orig != null) addorig = openupData(orig, ofld);
             for (int i = 0; (add != null) && (i < add.length); i++)
             {
                 CacheableObject d = add[i];
+                CacheableObject dorig = null;
+                if (addorig.length > i) dorig = addorig[i];
                 if (d != null) createTable(d.getClass());
+                isnew = d.smart___isNew();
                 if (isnew) { 
                     insert.add(d); 
                 } else {
-                    CacheObjectData cd = new CacheObjectData((CacheableObject)d, (CacheableObject)orig, isnew);
+                    CacheObjectData cd = new CacheObjectData((CacheableObject)d, (CacheableObject)dorig, isnew);
                     update.add(cd);
                 }
                 //add the sub objects into the list so that they also get stored.
@@ -324,7 +374,7 @@ public class PersistableManager implements AutoCloseable, DSErrorCodes
                     fld.setAccessible(true);
                     Object sub = fld.get(d);
                     Object suborig = null;
-                    if (orig != null) suborig = fld.get(orig);
+                    if (dorig != null) suborig = fld.get(dorig);
                     if (sub != null) addObjectTo(sub, fld, insert, update, suborig, isnew);
                 }
             }
@@ -476,7 +526,7 @@ public class PersistableManager implements AutoCloseable, DSErrorCodes
         throws CtxException
     {
         DataMetadata pmeta = PersistableData.metadataFor(datacls);
-        pmeta.createTable(_gname, _dbName);
+        pmeta.createTable(_gname, _dbname);
     }
 
     public void close()

@@ -1,0 +1,19 @@
+name:   WorkSpace
+type:   PrimeData
+flow:   WorkbenchFlow
+attributes:
+    - attribute:    name
+      type:         key
+states:
+    - name:         active
+      startState:   true
+    - name:         inactive
+      endState:     true
+security:
+    - name:     roleaccess
+      type:     smartrole
+      access:   execute
+    - name:     internalaccess
+      type:     unauthenticated
+      access:   execute
+      parm:     WorkSpaceEvent,SetupWorkSpace,RefreshWorkSpace

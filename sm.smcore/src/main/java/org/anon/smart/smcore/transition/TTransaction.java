@@ -59,6 +59,7 @@ import org.anon.smart.smcore.data.SmartPrimeData;
 import org.anon.smart.smcore.data.SmartDataED;
 import org.anon.smart.smcore.data.SmartDataTruth;
 import org.anon.smart.smcore.data.ConfigData;
+import org.anon.smart.smcore.data.SeriesData;
 import org.anon.smart.smcore.data.datalinks.LinkedData;
 import org.anon.smart.smcore.transition.plugin.PluginManager;
 
@@ -70,6 +71,8 @@ import org.anon.utilities.exception.CtxException;
 
 public class TTransaction
 {
+    private static final String NONCACHED = "noncached-";
+
     private Map<String, D2CacheTransaction> _transactions;
     private UUID _txnID;
 
@@ -91,6 +94,20 @@ public class TTransaction
         }
 
         return _transactions.get(flow);
+    }
+
+    public D2CacheTransaction startTransaction(SeriesData object)
+        throws CtxException
+    {
+        String flow = flowFor(object.getClass());
+        System.out.println("Adding: startTransaction: " + object + ":" + flow + ":");
+        String txnname = NONCACHED + flow;
+        if (!_transactions.containsKey(txnname))
+        {
+        	createTransaction(flow, true);
+        }
+
+        return _transactions.get(txnname);
     }
 
     public D2CacheTransaction getMonitorTransaction()
@@ -141,14 +158,30 @@ public class TTransaction
     	return _transactions.get(space);
     }
     
-    private void createTransaction(String flow)
+    private void createTransaction(String flow, boolean noncached)
     		throws CtxException
     {
     	   CrossLinkSmartTenant tenant = CrossLinkSmartTenant.currentTenant();
            RuntimeShell rshell = (RuntimeShell)tenant.runtimeShell();
            TransactDSpace space = rshell.getSpaceFor(flow);
-           D2CacheTransaction txn = DSpaceService.startTransaction(space, _txnID);
-           _transactions.put(flow, txn);
+           D2CacheTransaction txn = null;
+           String txnname = flow;
+           if (noncached)
+           {
+               txn = DSpaceService.startNonCachedTransaction(space, _txnID);
+               txnname = NONCACHED + flow;
+           }
+           else
+           {
+               txn = DSpaceService.startTransaction(space, _txnID);
+           }
+           _transactions.put(txnname, txn);
+    }
+
+    private void createTransaction(String flow)
+        throws CtxException
+    {
+        createTransaction(flow, false);
     }
     
 
@@ -160,6 +193,16 @@ public class TTransaction
             flow = object.smart___group();
         System.out.println("Adding addToTransaction: " + object + ":" + flow + ":" + object.smart___group());
         D2CacheTransaction txn = _transactions.get(flow);
+        assertion().assertNotNull(txn, "No transaction has been started for: " + flow);
+        DSpaceService.addObject(txn, object);
+    }
+
+    public void addToTransaction(SeriesData object)
+        throws CtxException
+    {
+        String flow = flowFor(object.getClass());
+        System.out.println("Adding addToTransaction: " + object + ":" + flow + ":");
+        D2CacheTransaction txn = _transactions.get(NONCACHED + flow);
         assertion().assertNotNull(txn, "No transaction has been started for: " + flow);
         DSpaceService.addObject(txn, object);
     }
@@ -233,6 +276,15 @@ public class TTransaction
         }
     }
 
+    public void simulate()
+        throws CtxException
+    {
+    	for (D2CacheTransaction txn : _transactions.values())
+        {
+            txn.simulate();
+        }
+    }
+
     public void commit()
         throws CtxException
     {
@@ -244,7 +296,10 @@ public class TTransaction
         throws CtxException
     {
         for (D2CacheTransaction txn : _transactions.values())
+        {
+            System.out.println("TTransaction: Calling rollback for Txn: " + txn);
             txn.rollback();
+        }
     }
 }
 

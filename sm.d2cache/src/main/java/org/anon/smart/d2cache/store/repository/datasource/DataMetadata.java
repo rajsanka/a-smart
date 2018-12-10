@@ -210,7 +210,7 @@ public interface DataMetadata extends DSErrorCodes
         assertion().assertNotNull(rmeta, obj, "Cannot find the related metadata for attribute " + rel);
         String rcolName = rel.referenceColumnName();
         AttributeMetadata lmeta = rmeta.columnMetadataFor(rcolName);
-        assertion().assertNotNull(lmeta, obj, "Cannot find the related metadata for attribute " + rcolName);
+        assertion().assertNotNull(lmeta, obj, "Cannot find the related metadata for attribute " + rcolName + ":" + rmeta.table() + ":" + val + ":" + obj);
 
         changeData(lmeta, rel.attributeField(), obj, val);
     }
@@ -231,7 +231,7 @@ public interface DataMetadata extends DSErrorCodes
                 val = fld.get(obj);
             String attribute = fld.getName();
             AttributeMetadata ameta = this.metadataFor(attribute);
-            if ((val != null) && (ameta.relatedTo() != null) && (ameta.relatedTo().size() > 0))
+            if ((val != null) && (ameta.relatedTo() != null) && (ameta.relatedTo().size() > 0) && (!ameta.isBackwardReference()))
             {
                 //setup all the related to the current value.
                 Collection<AttributeMetadata> related = ameta.relatedTo();
@@ -241,7 +241,9 @@ public interface DataMetadata extends DSErrorCodes
                 }
             }
 
-            if ((val != null) && ameta.isSubObject() && (ameta.relatedVia() == null))
+            //System.out.println("Parameter Value for: " + obj + ":" + val + ":" + ameta.isSubObject() + ":" + ameta.storeJSON() + ":" + ameta.isBackwardReference() + ":" + ameta.relatedVia());
+
+            if ((val != null) && ameta.isSubObject() && (ameta.relatedVia() == null) && (!ameta.storeJSON()))
             {
                 //means we are inside a sub object whose reference is stored in a column
                 //which is not handled by any other column.
@@ -252,9 +254,11 @@ public interface DataMetadata extends DSErrorCodes
                 assertion().assertNotNull(lmeta, obj, "Cannot find the related metadata for attribute " + attribute + ":" + colName);
 
                 lmeta.attributeField().setAccessible(true);
+                //System.out.println("getParamValue: " + val + ":" + (val instanceof CacheableObject) + ":" + colName);
                 if (val instanceof CacheableObject)
                 {
                     val = lmeta.attributeField().get(val);
+                    //System.out.println("getParamValue: read data: " + val + ":");
                 }
                 else if (val instanceof Collection)
                 {

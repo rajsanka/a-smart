@@ -62,7 +62,10 @@ public class CompiledUpdate extends AbstractSQL
         //do not update the key
         if (!meta.isKey())
         {
-            _attributes.add(meta.getSQLFragment());
+            if ((meta.relatedVia() == null) || (meta.isBackwardReference()))
+            {
+                _attributes.add(meta.getSQLFragment());
+            }
             super.addAttributeFragment(meta);
         }
     }

@@ -53,6 +53,7 @@ public interface TConstants
     public static final String SRCHCFG = "srchcfg";
     public static final String ALL = "all";
     public static final String SESSION = "session"; //this is implemented in secure package
+    public static final String USERPREFERENCES = "userpreference"; //this is implemented in secure package
 
     public static final String NEEDSSERVICE = "needsService";
     public static final String NOTMAPPED = "notMapped";

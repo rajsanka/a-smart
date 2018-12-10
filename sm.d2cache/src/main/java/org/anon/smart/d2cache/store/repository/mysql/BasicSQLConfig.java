@@ -89,5 +89,9 @@ public class BasicSQLConfig implements MySQLConfig
     {
         return _password;
     }
+
+    public String toString() {
+        return _name + ":" + _server + ":" + _port + ":" + _user + ":" + _db + ":" + _password;
+    }
 }
 

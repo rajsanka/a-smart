@@ -172,7 +172,8 @@ public class MySQLConnection implements StoreConnection
             }
             else
             {
-                conds = conds.get(item.attribute()).eq(item.value());
+                String oper = item.operator();
+                conds = conds.get(item.attribute()).add(oper, item.objectValue());
             }
         }
 

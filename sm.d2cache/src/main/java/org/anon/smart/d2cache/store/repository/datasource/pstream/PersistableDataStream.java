@@ -123,11 +123,14 @@ public class PersistableDataStream<T extends CacheableObject> implements DSError
             if (!(data instanceof EOS))
             {
                 _readData.add(data);
+                System.out.println("Mapped attribute is: " + _mapByAttribute);
                 if (_mapByAttribute != null)
                 {
                     _mapByAttribute.setAccessible(true);
                     Object val = _mapByAttribute.get(data);
+                    System.out.println("Mapped attribute is: " + _mapByAttribute + ":" + val);
                     Set<CacheableObject> vals = _mappedData.get(val);
+                    System.out.println("Mapped attribute is: " + _mapByAttribute + ":" + vals);
                     if (vals == null)
                     {
                         //has to be concurrent so we can handle parallely
@@ -135,6 +138,7 @@ public class PersistableDataStream<T extends CacheableObject> implements DSError
                     }
 
                     vals.add(data);
+                    System.out.println("Mapped attribute putting: " + val + ":" + vals);
                     _mappedData.put(val, vals);
                 }
             }
@@ -201,6 +205,7 @@ public class PersistableDataStream<T extends CacheableObject> implements DSError
         }
         catch (Exception e)
         {
+            e.printStackTrace();
             except().rt(e, this, new CtxException.Context("PersistableDataStream", "readNextData"));
         }
 
@@ -218,6 +223,7 @@ public class PersistableDataStream<T extends CacheableObject> implements DSError
                 //before the current relation is got, shd we do this not sure. For now 
                 //the logic is this. TODO: change later.
                 readNextData();
+                System.out.println("Did not reach end of stream: yielding: " + related + ":" + _mappedData);
                 Thread.currentThread().sleep(100); //yield.
             }
         }

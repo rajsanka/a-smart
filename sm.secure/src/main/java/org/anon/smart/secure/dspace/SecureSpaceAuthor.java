@@ -41,6 +41,7 @@
 
 package org.anon.smart.secure.dspace;
 
+import org.anon.smart.d2cache.D2CacheConfig;
 import org.anon.smart.d2cache.DataFilter;
 import org.anon.smart.base.dspace.DSpace;
 import org.anon.smart.base.dspace.DSpaceAuthor;
@@ -52,15 +53,19 @@ import org.anon.utilities.exception.CtxException;
 
 public class SecureSpaceAuthor implements DSpaceAuthor
 {
-    public SecureSpaceAuthor()
+    private D2CacheConfig _config;
+
+    public SecureSpaceAuthor(D2CacheConfig cfg)
     {
+        _config = cfg;
     }
 
     public DSpace newSpaceFor(String name, String fileType)
         throws CtxException
     {
         SecureDataFilter filter = new SecureDataFilter();
-        DSpace space = new TransactDSpaceImpl(name, new DataFilter[] { filter }, fileType);
+        System.out.println("Creating a space with: " + _config);
+        DSpace space = new TransactDSpaceImpl(name, new DataFilter[] { filter }, fileType, _config);
         filter.setupSpace(space);
         return space;
     }
@@ -69,7 +74,8 @@ public class SecureSpaceAuthor implements DSpaceAuthor
         throws CtxException
     {
         SecureDataFilter filter = new SecureDataFilter();
-        DSpace space = new BrowsableTransactDSpace(name, new DataFilter[] { filter }, fileType);
+        System.out.println("Creating a browable space with: " + _config);
+        DSpace space = new BrowsableTransactDSpace(name, new DataFilter[] { filter }, fileType, _config);
         filter.setupSpace(space);
         return space;
     }

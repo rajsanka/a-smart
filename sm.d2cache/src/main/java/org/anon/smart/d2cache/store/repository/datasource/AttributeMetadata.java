@@ -67,6 +67,8 @@ public interface AttributeMetadata
     public void addRelatedTo(AttributeMetadata meta);
     public Collection<AttributeMetadata> relatedTo();
     public String fieldpath();
+    public boolean isBackwardReference();
+    public Class backReferenceType();
 
     //These are attributes information for sub objects
     public String referenceColumnName();

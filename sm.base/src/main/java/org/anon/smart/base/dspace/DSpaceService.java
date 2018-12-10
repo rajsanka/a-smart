@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.anon.smart.base.tenant.CrossLinkSmartTenant;
 import org.anon.smart.base.utils.AnnotationUtils;
 import org.anon.smart.base.anatomy.SmartModuleContext;
 import org.anon.smart.base.flow.FlowConstants;
@@ -70,6 +71,24 @@ public class DSpaceService
     {
     }
 
+    public static boolean isNonCached(DSpace space, String group)
+        throws CtxException
+    {
+         Class dcls = CrossLinkSmartTenant.currentTenant().deploymentShell().dataClass(space.name(), group);
+         if (dcls == null)
+             dcls = CrossLinkSmartTenant.currentTenant().deploymentShell().seriesClass(space.name(), group);
+
+         if (dcls != null) return AnnotationUtils.isNonCached(dcls);
+
+         return false;
+    }
+
+    public static boolean isNonCached(Class<? extends DSpaceObject> dcls)
+        throws CtxException
+    {
+        return AnnotationUtils.isNonCached(dcls);
+    }
+
     public static DSpace spaceFor(String name, boolean browse, String fileStore)
         throws CtxException
     {
@@ -80,7 +99,7 @@ public class DSpaceService
             author = ctx.spaceAuthor();
 
         if (author == null)
-            author = new DefaultAuthor();
+            author = new DefaultAuthor(null);
 
         if (browse)
             ret = author.browsableSpaceFor(name, fileStore);
@@ -99,18 +118,39 @@ public class DSpaceService
             author = ctx.spaceAuthor();
 
         if (author == null)
-            author = new DefaultAuthor();
+            author = new DefaultAuthor(null);
 
         return author.spaceFilters();
     }
 
-    public static Reader readerFor(DSpace space)
-            throws CtxException
+    private static Reader noncacheReaderFor(DSpace space)
+        throws CtxException
     {
-            return readerFor(space, false);
+        return space.nonCachedReader();
+    }
+
+    private static Reader readerFor(DSpace space, String group)
+        throws CtxException
+    {
+        if (isNonCached(space, group))
+        {
+            System.out.println("Returning noncached reader for: " + group);
+            return noncacheReaderFor(space);
+        }
+
+        return readerFor(space, false);
+    }
+
+    private static Reader readerFor(DSpace space, Class<? extends DSpaceObject> cls)
+        throws CtxException
+    {
+        if (isNonCached(cls))
+            return noncacheReaderFor(space);
+
+        return readerFor(space, false);
     }
     
-    public static Reader readerFor(DSpace space, boolean memOnly)
+    private static Reader readerFor(DSpace space, boolean memOnly)
         throws CtxException
     {
         return space.myReader(memOnly);
@@ -123,7 +163,7 @@ public class DSpaceService
         return (BrowsableReader)space.getBrowsableReader();
     }
 
-    public static Reader readerFor(DSpace[] space)
+    private static Reader readerFor(DSpace[] space)
         throws CtxException
     {
         D2Cache[] incache = new D2Cache[space.length];
@@ -136,7 +176,7 @@ public class DSpaceService
     public static void registerInSpace(DSpace space, String group, Class<? extends DSpaceObject> datacls)
         throws CtxException
     {
-        Reader rdr = readerFor(space);
+        Reader rdr = readerFor(space, datacls);
         if (rdr != null)
             rdr.registerMetadata(group, datacls);
     }
@@ -144,11 +184,11 @@ public class DSpaceService
     public static Object lookupIn(DSpace space, Object key, String group)
             throws CtxException
     {
-            Object ret = null;
-            Reader rdr = readerFor(space);
-            if (rdr != null)
-                ret = rdr.lookup(group, key);
-            return ret;
+        Object ret = null;
+        Reader rdr = readerFor(space, group);
+        if (rdr != null)
+            ret = rdr.lookup(group, key);
+        return ret;
     }
     
     public static Object lookupIn(DSpace space, Object key, String group, boolean memOnly)
@@ -163,19 +203,19 @@ public class DSpaceService
     
     public static boolean existsObject(DSpace space, Object key, String group, boolean memOnly)
             throws CtxException
-        {
-            boolean ret = false;
-            Reader rdr = readerFor(space, memOnly);
-            if (rdr != null)
-                ret = rdr.exists(group, key);
-            return ret;
-        }
+    {
+        boolean ret = false;
+        Reader rdr = readerFor(space, memOnly);
+        if (rdr != null)
+            ret = rdr.exists(group, key);
+        return ret;
+    }
 
-    public static List<Object> searchIn(DSpace space, Map<String, String> query, long size, Class clz, long pn, long ps, String sby, boolean asc)
+    public static List<Object> searchIn(DSpace space, Map<String, Object> query, long size, Class clz, long pn, long ps, String sby, boolean asc)
         throws CtxException
     {
         List<Object> ret = null;
-        Reader rdr = readerFor(space);
+        Reader rdr = readerFor(space, (Class<? extends DSpaceObject>)clz);
         QueryObject qo = new QueryObject();
         qo.setResultType(clz);
         //qo.addCondition((String) query);
@@ -183,7 +223,8 @@ public class DSpaceService
         if (rdr != null)
         {
             System.out.println("Getting for class; " + clz);
-        	String group = ArtefactType.artefactTypeFor(FlowConstants.PRIMEDATA).getName(clz);
+        	//String group = ArtefactType.artefactTypeFor(FlowConstants.PRIMEDATA).getName(clz);
+            String group = AnnotationUtils.className(clz);
         	ret = rdr.search(group, qo, size, pn, ps, sby, asc);
             //For now, have to find a better mechanism
             query.put("TOTALSIZE", qo.getTotalFound() + "");
@@ -209,7 +250,7 @@ public class DSpaceService
     {
     	List<Object> keyList = null;
     	List<Object> resultSet = new ArrayList<Object>();
-    	Reader rdr = readerFor(space);
+    	Reader rdr = readerFor(space, parms.getGroup());
     	long totSize = 0;
         long size = parms.getSize();
         String group = parms.getGroup();
@@ -302,7 +343,7 @@ public class DSpaceService
             return;
 
         UUID txnid = UUID.randomUUID();
-        D2CacheTransaction transaction = space.startTransaction(txnid,false);
+        D2CacheTransaction transaction = space.startTransaction(txnid, false, false);
         for (int i = 0; i < sobj.length; i++)
         {
             if ((origs != null) && (origs.length > i) && (origs[i] != null))
@@ -314,24 +355,32 @@ public class DSpaceService
                 addObject(transaction, sobj[i]);
             }
         }
+        transaction.simulate();
         transaction.commit();
+    }
+
+    public static D2CacheTransaction startNonCachedTransaction(TransactDSpace space, UUID txnid)
+        throws CtxException
+    {
+        System.out.println("Starting non-cached transaction for: " + space);
+        return space.startTransaction(txnid, false, true);
     }
 
     public static D2CacheTransaction startTransaction(TransactDSpace space, UUID txnid)
         throws CtxException
     {
-        return space.startTransaction(txnid,false);
+        return space.startTransaction(txnid, false, false);
     }
     
     public static D2CacheTransaction startFSTransaction(TransactDSpace space, UUID txnid)
             throws CtxException
-        {
-            return space.startTransaction(txnid,true);
-        }
+    {
+        return space.startTransaction(txnid, true, false);
+    }
     
     public static void addFSObject(D2CacheTransaction transaction, String srcFl , String destFileName,String group)
             throws CtxException
-        {
+    {
 	    String[] params = {srcFl , destFileName};
             StoreItem item = new StoreItem(null, params, group);
             transaction.add(item);
@@ -342,7 +391,7 @@ public class DSpaceService
                 for (int r = 0; (rel != null) && (r < rel.length); r++)
                     addObject(transaction, rel[r]);
             }*/
-        }
+    }
     
     public static List getListingsFor(DSpace space, String group, String sortBy, int listingsPerPage, 
             int pageNum)
@@ -350,7 +399,7 @@ public class DSpaceService
     {
         List<Object> keyList = null;
         List<Object> resultSet = new ArrayList<Object>();
-        Reader rdr = readerFor(space);
+        Reader rdr = readerFor(space, group);
        if (rdr != null)
         {
             keyList = rdr.getListings(group, sortBy, listingsPerPage, pageNum); //Got keyList

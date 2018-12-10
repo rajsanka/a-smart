@@ -30,6 +30,7 @@ events:
     - org.anon.smart.smcore.inbuilt.events.CCAvenueCancel
 transitions:
     - org.anon.smart.smcore.inbuilt.transition.SearchManager
+    - org.anon.smart.smcore.inbuilt.transition.SeriesDataManager
     - org.anon.smart.smcore.inbuilt.transition.CRUDManager
     - org.anon.smart.smcore.inbuilt.transition.MetricAccessManager
     - org.anon.smart.smcore.inbuilt.transition.ConfigManager
@@ -72,6 +73,7 @@ features:
         - org.anon.smart.smcore.inbuilt.events.GetTemplateMeta
         - org.anon.smart.smcore.inbuilt.events.CheckExistence
         - org.anon.smart.smcore.inbuilt.transition.SearchManager
+        - org.anon.smart.smcore.inbuilt.transition.SeriesDataManager
         - org.anon.smart.smcore.inbuilt.transition.CRUDManager
         - org.anon.smart.smcore.inbuilt.transition.MetricAccessManager
         - org.anon.smart.smcore.inbuilt.transition.ConfigManager

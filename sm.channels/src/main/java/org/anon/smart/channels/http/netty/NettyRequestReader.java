@@ -117,6 +117,7 @@ public class NettyRequestReader implements HTTPMessageReader
         }
         response.setHeader(CONTENT_TYPE, "application/json");
         response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader(CONTENT_LENGTH, response.getContent().readableBytes());
 
         return response;
@@ -130,6 +131,7 @@ public class NettyRequestReader implements HTTPMessageReader
         response.setContent(ChannelBuffers.copiedBuffer(buff, CharsetUtil.UTF_8));
         response.setHeader(CONTENT_TYPE, "text/html");
         response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader("Access-Control-Allow-Headers", "Session-id, accept, cache-control, x-requested-with, content-type");
         response.setHeader("Access-Control-Allow-Methods", "POST, GET");
         response.setHeader(CONTENT_LENGTH, response.getContent().readableBytes());
@@ -145,6 +147,7 @@ public class NettyRequestReader implements HTTPMessageReader
         response.setContent(ChannelBuffers.copiedBuffer(buff, CharsetUtil.UTF_8));
         response.setHeader(CONTENT_TYPE, "text/html");
         response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader(CONTENT_LENGTH, response.getContent().readableBytes());
 
         return response;

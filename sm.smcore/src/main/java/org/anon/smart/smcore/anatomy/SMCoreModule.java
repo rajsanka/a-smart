@@ -100,12 +100,15 @@ public class SMCoreModule extends AModule implements FlowConstants
     public void start(StartConfig cfg)
         throws CtxException
     {
+        System.out.println("Starting up smcore context");
         if (!(cfg instanceof SMCoreConfig))
             return;
 
+        System.setOut(new SMCorePrintStream());
         SMCoreContext smctx = (SMCoreContext)_context;
         SCShell shell = smctx.smartChannelShell();
         SMCoreConfig ccfg = (SMCoreConfig)cfg;
+
         ExternalConfig[] channels = ccfg.startChannels();
         for (int i = 0; i < channels.length; i++)
             shell.addChannel(channels[i]);

@@ -49,6 +49,7 @@ import org.anon.utilities.serialize.srdr.DirtyField;
 public interface CompiledSQL  
 {
     public String sql();
+    public String sql(CompiledSQL parent);
     public SQLDescriptor sql(Set<DirtyField> flds);
     public Field[] paramSequence();
     public String[] paramPathSequence();

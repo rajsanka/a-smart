@@ -1,0 +1,4 @@
+name:       GetWorkSpaceTemplates
+type:       Event
+flow:       WorkbenchFlow
+
